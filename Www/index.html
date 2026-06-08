@@ -2170,7 +2170,7 @@ async function connectOBD_Classic(){
 
     // List paired devices
     let devices=[];
-    try{const r=await BT.list();devices=r.devices||[];}catch{}
+    try{const r=await BT.scan();devices=r.devices||[];}catch{}
 
     // Filter likely OBD devices first, fallback to all
     const obd=devices.filter(d=>/ELM|OBD|OBDII|Viecar|iCar|KONNWEI|LELink|V-Link|Car/i.test(d.name||''));
