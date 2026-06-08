@@ -1168,7 +1168,7 @@ async function _tryGetChar(svc, uuids){
   return null;
 }
 
-let btDevice=null, btChar=null, obdBuf='', obdPoll=null, _btClassic=null;
+let btDevice=null, btChar=null, obdBuf='', obdPoll=null, _btClassic=null, _btClassicAddress=null, _btReadListener=null;
 
 async function connectOBD(){
   if(!navigator.bluetooth){showToast('❌ Not Supported','Use Chrome on Android/Desktop');return;}
@@ -1240,7 +1240,7 @@ async function connectOBD(){
 
 async function sendOBD(cmd){
   try{
-    if(_btClassic){await _btClassic.write({data:cmd});return;}
+    if(_btClassic&&_btClassicAddress){await _btClassic.write({address:_btClassicAddress,value:cmd});return;}
     if(btChar){await btChar.writeValue(new TextEncoder().encode(cmd));}
   }catch(e){console.warn('sendOBD error',e);}
 }
@@ -1282,10 +1282,10 @@ function parseOBD(raw){
 const PIDS=['010D\r','010C\r','0105\r','012F\r','010B\r','0111\r','0104\r','010F\r','0142\r'];
 let pidI=0;
 function startPoll(){clearInterval(obdPoll);obdPoll=setInterval(async()=>{if(S.connected&&(btChar||_btClassic))await sendOBD(PIDS[pidI++%PIDS.length]);},200);}
-function onDisconnect(){S.connected=false;clearInterval(obdPoll);_btClassic=null;setOBDBtn('off');showToast('🔌 Disconnected','Signal lost');}
+function onDisconnect(){S.connected=false;clearInterval(obdPoll);if(_btReadListener){_btReadListener.remove();_btReadListener=null;}_btClassic=null;_btClassicAddress=null;setOBDBtn('off');showToast('🔌 Disconnected','Signal lost');}
 async function disconnectOBD(){
   clearInterval(obdPoll);
-  if(_btClassic){try{await _btClassic.stopNotifications();await _btClassic.disconnect();}catch{}_btClassic=null;}
+  if(_btClassic){try{if(_btReadListener){_btReadListener.remove();_btReadListener=null;}await _btClassic.stopNotifications({address:_btClassicAddress});await _btClassic.disconnect({address:_btClassicAddress});}catch{}_btClassic=null;_btClassicAddress=null;}
   if(btDevice?.gatt?.connected){try{await btDevice.gatt.disconnect();}catch{}}
   S.connected=false;setOBDBtn('off');
 }
@@ -2168,9 +2168,10 @@ async function connectOBD_Classic(){
       if(!enabled)await BT.enable();
     }catch{}
 
-    // List paired devices
+    // Scan for nearby devices (also finds paired ones)
+    showToast('🔍 Scanning...', 'Looking for Bluetooth devices');
     let devices=[];
-    try{const r=await BT.scan();devices=r.devices||[];}catch{}
+    try{const r=await BT.scan();devices=r.devices||[];}catch(e){console.warn('scan failed',e);}
 
     // Filter likely OBD devices first, fallback to all
     const obd=devices.filter(d=>/ELM|OBD|OBDII|Viecar|iCar|KONNWEI|LELink|V-Link|Car/i.test(d.name||''));
@@ -2182,12 +2183,11 @@ async function connectOBD_Classic(){
 
     showToast('🔌 Connecting...', chosen.name||chosen.address);
 
-    // Connect with retry
-    let connected=false;
+    // Connect insecurely with retry (better for ELM327 SPP)
     for(let attempt=1;attempt<=3;attempt++){
       try{
-        await BT.connect({address:chosen.address});
-        connected=true; break;
+        await BT.connectInsecure({address:chosen.address});
+        break;
       }catch(e){
         if(attempt===3)throw e;
         await new Promise(r=>setTimeout(r,800));
@@ -2196,7 +2196,9 @@ async function connectOBD_Classic(){
 
     // Setup notifications
     _btClassic=BT;
-    await BT.startNotifications((data)=>{
+    _btClassicAddress=chosen.address;
+    await BT.startNotifications({address:chosen.address, delimiter:'>'});
+    _btReadListener=BT.addListener('onRead',(data)=>{
       const val=data.value||'';
       obdBuf+=val;
       if(obdBuf.includes('>')){parseOBD(obdBuf);obdBuf='';}
@@ -2212,7 +2214,8 @@ async function connectOBD_Classic(){
     startPoll();
 
   }catch(e){
-    _btClassic=null;
+    _btClassic=null;_btClassicAddress=null;
+    if(_btReadListener){_btReadListener.remove();_btReadListener=null;}
     setOBDBtn('off');
     const msg=e.message||'';
     if(msg.includes('paired')||msg.includes('bond'))
@@ -2374,4 +2377,85 @@ async function scanDTCs(){
     await sleep(600);
     status.textContent='⚠️ Connect OBD device first, or enable Demo Mode';
     status.style.color='var(--red)';
-    flist.innerHTML='<div class="no-faults"><div class="no-faults-icon">🔌</div><div class="empty-text">No OBD Connection</div><div class="empty-sub">Connect OBD or enable D
+    flist.innerHTML='<div class="no-faults"><div class="no-faults-icon">🔌</div><div class="empty-text">No OBD Connection</div><div class="empty-sub">Connect OBD or enable Demo Mode</div></div>';
+    scanInProgress=false;
+    btn.innerHTML='🔍 SCAN NOW';
+    btn.disabled=false;
+  }
+}
+
+function finishScan(){
+  const btn=document.getElementById('scan-btn');
+  const status=document.getElementById('fault-status');
+  const flist=document.getElementById('fault-list');
+  btn.innerHTML='🔍 SCAN NOW';
+  btn.disabled=false;
+  scanInProgress=false;
+  if(activeDTCs.length===0){
+    status.textContent='✅ No fault codes found';
+    status.style.color='var(--green)';
+    flist.innerHTML='<div class="no-faults"><div class="no-faults-icon">✅</div><div class="empty-text">All Clear</div><div class="empty-sub">No fault codes detected in ECU</div></div>';
+  }else{
+    status.textContent=`⚠️ ${activeDTCs.length} fault code${activeDTCs.length>1?'s':''} found`;
+    status.style.color='var(--red)';
+    const sevCols=['','#00d4ff','#ffaa00','#ff6b00','#ff2244'];
+    const sevLbls=['','INFO','WARNING','SERIOUS','CRITICAL'];
+    flist.innerHTML=activeDTCs.map(d=>{
+      const info=DTC_DB[d.code]||{name:'Unknown Code',sys:'Unknown',sev:2,fix:'No information available.',spec:'Mechanic'};
+      const c=sevCols[info.sev]||'#ffaa00';
+      const lbl=sevLbls[info.sev]||'WARNING';
+      return `<div style="background:linear-gradient(135deg,#0a1628,#0d1f3c);border:1px solid ${c}44;border-radius:10px;padding:12px 14px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-family:monospace;font-size:15px;font-weight:700;color:${c};letter-spacing:2px">${d.code}</span>
+          <span style="font-size:10px;font-weight:700;color:${c};background:${c}22;padding:2px 8px;border-radius:10px">${lbl}${d.pending?' · PENDING':''}</span>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:4px">${info.name}</div>
+        <div style="font-size:11px;color:var(--cyan);margin-bottom:6px">System: ${info.sys}</div>
+        <div style="font-size:11px;color:var(--gray);line-height:1.5">${info.fix}</div>
+        <div style="font-size:11px;color:var(--yellow);margin-top:6px">👨‍🔧 ${info.spec}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function parseDTCResponse(raw){
+  const lines=raw.split(/[\r\n]+/).filter(l=>l.trim()&&!l.includes('>'));
+  for(const line of lines){
+    const hex=line.replace(/[\s:]/g,'');
+    if(!hex.match(/^[0-9A-Fa-f]+$/))continue;
+    let offset=0;
+    const u=hex.toUpperCase();
+    if(u.startsWith('43'))offset=2;else continue;
+    for(let i=offset;i<hex.length-3;i+=4){
+      const b1=parseInt(hex.substr(i,2),16);
+      const b2=parseInt(hex.substr(i+2,2),16);
+      if(b1===0&&b2===0)continue;
+      const types=['P','C','B','U'];
+      const code=`${types[(b1>>6)&3]}${(b1>>4)&3}${(b1&0xf).toString(16).toUpperCase()}${((b2>>4)&0xf).toString(16).toUpperCase()}${(b2&0xf).toString(16).toUpperCase()}`;
+      activeDTCs.push({code,pending:false});
+    }
+  }
+}
+
+function clearDTCs(){
+  if(!S.connected&&!S.demo){showToast('❌ Not Connected','Connect OBD device first');return;}
+  if(S.connected)sendOBD('04\r');
+  activeDTCs=[];
+  const flist=document.getElementById('fault-list');
+  const status=document.getElementById('fault-status');
+  flist.innerHTML='<div class="no-faults"><div class="no-faults-icon">🗑️</div><div class="empty-text">Codes Cleared</div><div class="empty-sub">Fault codes removed from ECU</div></div>';
+  status.textContent='✅ Fault codes cleared';
+  status.style.color='var(--green)';
+  showToast('✅ Cleared','Fault codes cleared from ECU');
+}
+</script>
+
+<div id="bt-picker" onclick="if(event.target===this)closeBTPicker(null)">
+  <div class="bt-sheet">
+    <div class="bt-sheet-title">📡 SELECT BLUETOOTH DEVICE</div>
+    <div id="bt-device-list"></div>
+    <button class="bt-cancel" onclick="closeBTPicker(null)">✕ CANCEL</button>
+  </div>
+</div>
+</body>
+</html>
