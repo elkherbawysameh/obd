@@ -64,6 +64,10 @@ jobs:
             c = c.replace('// Enable BT if off', 'try{ BT.requestPermissions(); }catch{}\n    // Enable BT if off');
             changed = true; console.log('Fix 4: permissions');
           }
+          if (!c.includes('const sleep=')) {
+            c = c.replace('<script>', '<script>\nconst sleep=ms=>new Promise(r=>setTimeout(r,ms));');
+            changed = true; console.log('Fix 5: sleep');
+          }
 
           if (changed) fs.writeFileSync(p, c, 'utf-8');
           else console.log('No fixes needed');
