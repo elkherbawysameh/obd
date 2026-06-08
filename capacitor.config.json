@@ -1,0 +1,13 @@
+{
+  "appId": "com.obddashboard.app",
+  "appName": "OBD Dashboard",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "BluetoothSerial": {}
+  }
+}
