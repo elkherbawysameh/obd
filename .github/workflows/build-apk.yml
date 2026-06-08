@@ -32,13 +32,8 @@ jobs:
           mkdir -p www
           if [ -f "index.html" ] && [ ! -f "www/index.html" ]; then
             cp index.html www/index.html
-            echo "Copied index.html from root to www/"
           fi
-          if [ ! -f "www/index.html" ]; then
-            echo "ERROR: www/index.html not found!"
-            exit 1
-          fi
-          echo "OK: www/index.html found ($(wc -c < www/index.html) bytes)"
+          [ -f "www/index.html" ] && echo "OK: $(wc -c < www/index.html) bytes" || (echo "ERROR: www/index.html missing" && exit 1)
 
       - name: Add Android platform
         run: npx cap add android
@@ -49,27 +44,12 @@ jobs:
       - name: Add Bluetooth permissions
         run: |
           FILE="android/app/src/main/AndroidManifest.xml"
-          python3 - "$FILE" << 'PYEOF'
-import sys
-path = sys.argv[1]
-with open(path, 'r') as f:
-    content = f.read()
-perms = (
-    '    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />\n'
-    '    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />\n'
-    '    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />\n'
-    '    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />\n'
-    '    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n'
-    '    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n'
-)
-if 'BLUETOOTH_CONNECT' not in content:
-    content = content.replace('    <application', perms + '    <application', 1)
-    with open(path, 'w') as f:
-        f.write(content)
-    print('Bluetooth permissions added.')
-else:
-    print('Permissions already present, skipping.')
-PYEOF
+          if ! grep -q "BLUETOOTH_CONNECT" "$FILE"; then
+            sed -i 's|    <application|    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />\n    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <application|' "$FILE"
+            echo "Permissions added successfully"
+          else
+            echo "Permissions already present"
+          fi
 
       - name: Build Debug APK
         run: |
