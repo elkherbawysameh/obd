@@ -27,6 +27,23 @@ jobs:
       - name: Install npm dependencies
         run: npm install
 
+      - name: Prepare web assets
+        run: |
+          mkdir -p www
+          # If index.html is at repo root, move it into www/
+          if [ -f "index.html" ] && [ ! -f "www/index.html" ]; then
+            cp index.html www/index.html
+            echo "Copied index.html from root to www/"
+          fi
+          # Verify
+          if [ ! -f "www/index.html" ]; then
+            echo "ERROR: www/index.html not found in repo!"
+            ls -la
+            ls -la www/ 2>/dev/null || echo "(www/ is empty or missing)"
+            exit 1
+          fi
+          echo "OK: www/index.html found ($(wc -c < www/index.html) bytes)"
+
       - name: Add Android platform
         run: npx cap add android
 
@@ -36,8 +53,7 @@ jobs:
       - name: Add Bluetooth permissions
         run: |
           FILE="android/app/src/main/AndroidManifest.xml"
-          PERMS='    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />\n    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />'
-          sed -i "s|<manifest |${PERMS}\n<manifest |" "$FILE"
+          sed -i 's|<manifest|<uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />\n    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <manifest|' "$FILE"
 
       - name: Build Debug APK
         run: |
