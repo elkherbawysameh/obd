@@ -63,6 +63,7 @@ jobs:
           if(!c.includes('atrvMatch')){c=c.replace('raw.split(/[\r\n]+/).forEach','const atrvMatch=raw.match(/(\d+\.\d+)V/i);if(atrvMatch){const v=parseFloat(atrvMatch[1]);if(v>5&&v<20)S.voltage=v;}\n  raw.split(/[\r\n]+/).forEach');x=true;console.log('Fix7:voltage');}
           if(c.includes(oldFault)){c=c.replace(oldFault,newFault);x=true;console.log('Fix8:faults');}
           if(!c.includes('S.connected&&!S.demo&&S.speed')){c=c.replace(\"document.getElementById('gear-d').textContent=S.gear;\",\"if(S.connected&&!S.demo&&S.speed>=0){S.gear=S.speed<3?'P':S.speed<15?'1':S.speed<35?'2':S.speed<65?'3':S.speed<100?'4':S.speed<130?'5':'6';}\ndocument.getElementById('gear-d').textContent=S.gear;\");x=true;console.log('Fix9:gear');}
+          if(!c.includes('wakeLock')){c=c.replace('setInterval(tickClock,1000);tickClock();','setInterval(tickClock,1000);tickClock();\n  let _wakeLock=null;\n  async function acquireWakeLock(){try{if(\"wakeLock\" in navigator){_wakeLock=await navigator.wakeLock.request(\"screen\");_wakeLock.addEventListener(\"release\",()=>{_wakeLock=null;});}}catch(e){}}\n  acquireWakeLock();\n  document.addEventListener(\"visibilitychange\",async()=>{if(document.visibilityState===\"visible\"){acquireWakeLock();if(S.connected&&(btChar||_btClassic)&&!obdPoll)startPoll();}else{if(_wakeLock){try{await _wakeLock.release();}catch{}_wakeLock=null;}}});');x=true;console.log('Fix10:wakelock');}
 
           if(x)fs.writeFileSync(p,c,'utf-8');
           else console.log('No fixes needed');
@@ -74,12 +75,16 @@ jobs:
       - name: Sync web assets
         run: npx cap sync android
 
-      - name: Add Bluetooth permissions
+      - name: Add Bluetooth + screen permissions
         run: |
           FILE="android/app/src/main/AndroidManifest.xml"
           if ! grep -q "BLUETOOTH_CONNECT" "$FILE"; then
-            sed -i 's|    <application|    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />\n    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <application|' "$FILE"
-            echo "Bluetooth permissions added"
+            sed -i 's|    <application|    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />\n    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.WAKE_LOCK" />\n    <application|' "$FILE"
+            echo "Permissions added"
+          fi
+          if ! grep -q "keepScreenOn" "$FILE"; then
+            sed -i 's|android:exported="true">|android:exported="true"\n            android:keepScreenOn="true">|' "$FILE"
+            echo "keepScreenOn added"
           fi
 
       - name: Build Debug APK
