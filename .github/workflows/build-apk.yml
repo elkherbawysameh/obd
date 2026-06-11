@@ -52,9 +52,8 @@ jobs:
           from PIL import Image, ImageDraw
 
           def draw_rect_gear(draw, cx, cy, r_out, r_in, teeth, hole_r, color, start_a=0):
-              """Draw gear with rectangular teeth matching the Craft Innovations logo"""
               pts = []
-              hw = math.pi / teeth * 0.47
+              hw = math.pi / teeth * 0.48
               for i in range(teeth):
                   a = start_a + 2 * math.pi * i / teeth
                   pts.append((cx + r_in  * math.cos(a - hw - 0.02), cy + r_in  * math.sin(a - hw - 0.02)))
@@ -65,19 +64,29 @@ jobs:
               draw.ellipse([cx-hole_r, cy-hole_r, cx+hole_r, cy+hole_r], fill=(0,0,0,255))
 
           sizes = {"mdpi": 48, "hdpi": 72, "xhdpi": 96, "xxhdpi": 144, "xxxhdpi": 192}
+
+          # If logo.png exists in repo root, use it directly (exact logo)
+          use_logo = os.path.exists("logo.png")
+          if use_logo:
+              src = Image.open("logo.png").convert("RGBA")
+              print("Using logo.png from repo")
+
           for dpi, sz in sizes.items():
               for fname in ["ic_launcher.png", "ic_launcher_round.png"]:
-                  img = Image.new("RGBA", (sz, sz), (0, 0, 0, 255))
-                  d = ImageDraw.Draw(img)
-                  s = sz / 192
-                  # Blue large gear (lower-center, 8 teeth) — matches logo
-                  draw_rect_gear(d, int(83*s), int(109*s), int(86*s), int(68*s), 8, int(40*s), "#1565C0", math.pi/8)
-                  # Green smaller gear (upper-right, 6 teeth) — matches logo
-                  draw_rect_gear(d, int(124*s), int(67*s), int(65*s), int(52*s), 6, int(29*s), "#4CAF50", math.pi/6)
+                  if use_logo:
+                      img = src.resize((sz, sz), Image.LANCZOS)
+                  else:
+                      img = Image.new("RGBA", (sz, sz), (0, 0, 0, 255))
+                      d = ImageDraw.Draw(img)
+                      s = sz / 192
+                      # Blue gear: large, fills frame, bottom cropped (matches Craft Innovations logo)
+                      draw_rect_gear(d, int(92*s), int(122*s), int(94*s), int(75*s), 8, int(44*s), "#1565C0", math.pi/8)
+                      # Green gear: upper-right overlapping
+                      draw_rect_gear(d, int(130*s), int(68*s), int(64*s), int(50*s), 6, int(31*s), "#4CAF50", math.pi/6)
                   out = "android/app/src/main/res/mipmap-" + dpi
                   os.makedirs(out, exist_ok=True)
                   img.save(out + "/" + fname)
-          print("Icons done")
+          print("Icons done" + (" (from logo.png)" if use_logo else " (generated)"))
           PYEOF
 
       - name: Patch MainActivity for background keep-alive
