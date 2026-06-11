@@ -1,6 +1,6 @@
 {
   "appId": "com.obddashboard.app",
-  "appName": "OBD Dashboard",
+  "appName": "Craft Car Dashboard",
   "webDir": "www",
   "android": {
     "allowMixedContent": true,
