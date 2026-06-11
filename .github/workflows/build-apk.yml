@@ -51,13 +51,16 @@ jobs:
           import os, math
           from PIL import Image, ImageDraw
 
-          def draw_gear(draw, cx, cy, radius, teeth, tooth_h, hole_r, color):
+          def draw_rect_gear(draw, cx, cy, r_out, r_in, teeth, hole_r, color, start_a=0):
+              """Draw gear with rectangular teeth matching the Craft Innovations logo"""
               pts = []
-              n = teeth * 4
-              for i in range(n):
-                  a = 2 * math.pi * i / n - math.pi / n
-                  r = radius + tooth_h if (i % 4 in [1, 2]) else radius
-                  pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
+              hw = math.pi / teeth * 0.47
+              for i in range(teeth):
+                  a = start_a + 2 * math.pi * i / teeth
+                  pts.append((cx + r_in  * math.cos(a - hw - 0.02), cy + r_in  * math.sin(a - hw - 0.02)))
+                  pts.append((cx + r_out * math.cos(a - hw),         cy + r_out * math.sin(a - hw)))
+                  pts.append((cx + r_out * math.cos(a + hw),         cy + r_out * math.sin(a + hw)))
+                  pts.append((cx + r_in  * math.cos(a + hw + 0.02), cy + r_in  * math.sin(a + hw + 0.02)))
               draw.polygon(pts, fill=color)
               draw.ellipse([cx-hole_r, cy-hole_r, cx+hole_r, cy+hole_r], fill=(0,0,0,255))
 
@@ -67,8 +70,10 @@ jobs:
                   img = Image.new("RGBA", (sz, sz), (0, 0, 0, 255))
                   d = ImageDraw.Draw(img)
                   s = sz / 192
-                  draw_gear(d, int(75*s), int(115*s), int(58*s), 10, int(11*s), int(32*s), "#1565C0")
-                  draw_gear(d, int(128*s), int(72*s), int(46*s), 8, int(9*s), int(25*s), "#4CAF50")
+                  # Blue large gear (lower-center, 8 teeth) — matches logo
+                  draw_rect_gear(d, int(83*s), int(109*s), int(86*s), int(68*s), 8, int(40*s), "#1565C0", math.pi/8)
+                  # Green smaller gear (upper-right, 6 teeth) — matches logo
+                  draw_rect_gear(d, int(124*s), int(67*s), int(65*s), int(52*s), 6, int(29*s), "#4CAF50", math.pi/6)
                   out = "android/app/src/main/res/mipmap-" + dpi
                   os.makedirs(out, exist_ok=True)
                   img.save(out + "/" + fname)
