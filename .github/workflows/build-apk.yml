@@ -1,4 +1,4 @@
-name: Build OBD Dashboard APK
+name: Build Craft Car Dashboard APK
 on:
   push:
     branches: [ main ]
