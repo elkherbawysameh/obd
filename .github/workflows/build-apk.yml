@@ -84,7 +84,7 @@ jobs:
           if "onPause" not in c:
               patched = c.replace(
                   "public class MainActivity extends BridgeActivity {}",
-                  "public class MainActivity extends BridgeActivity {\n    @Override\n    protected void onPause() {\n        super.onPause();\n        if (getBridge() != null && getBridge().getWebView() != null) {\n            getBridge().getWebView().onResume();\n        }\n    }\n}"
+                  "public class MainActivity extends BridgeActivity {\n    @Override\n    public void onPause() {\n        super.onPause();\n        if (getBridge() != null && getBridge().getWebView() != null) {\n            getBridge().getWebView().onResume();\n        }\n    }\n}"
               )
               with open(path, "w") as f:
                   f.write(patched)
