@@ -38,33 +38,6 @@ jobs:
           fi
           ls www/ && echo "Assets ready"
 
-      - name: Fix HTML
-        run: |
-          node -e "
-          const fs=require('fs');
-          const p='www/index.html';
-          const tail    =Buffer.from('ICAgIGZsaXN0LmlubmVySFRNTD0nPGRpdiBjbGFzcz0ibm8tZmF1bHRzIj48ZGl2IGNsYXNzPSJuby1mYXVsdHMtaWNvbiI+8J+UjDwvZGl2PjxkaXYgY2xhc3M9ImVtcHR5LXRleHQiPk5vIE9CRCBDb25uZWN0aW9uPC9kaXY+PGRpdiBjbGFzcz0iZW1wdHktc3ViIj5Db25uZWN0IE9CRCBvciBlbmFibGUgRGVtbyBNb2RlPC9kaXY+PC9kaXY+JzsKICAgIHNjYW5JblByb2dyZXNzPWZhbHNlOwogICAgYnRuLmlubmVySFRNTD0n8J+UjSBTQ0FOIE5PVyc7CiAgICBidG4uZGlzYWJsZWQ9ZmFsc2U7CiAgfQp9CgpmdW5jdGlvbiBmaW5pc2hTY2FuKCl7CiAgY29uc3QgYnRuPWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdzY2FuLWJ0bicpOwogIGNvbnN0IHN0YXR1cz1kb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnZmF1bHQtc3RhdHVzJyk7CiAgY29uc3QgZmxpc3Q9ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2ZhdWx0LWxpc3QnKTsKICBidG4uaW5uZXJIVE1MPSfwn5SNIFNDQU4gTk9XJzsKICBidG4uZGlzYWJsZWQ9ZmFsc2U7CiAgc2NhbkluUHJvZ3Jlc3M9ZmFsc2U7CiAgaWYoYWN0aXZlRFRDcy5sZW5ndGg9PT0wKXsKICAgIHN0YXR1cy50ZXh0Q29udGVudD0n4pyFIE5vIGZhdWx0IGNvZGVzIGZvdW5kJzsKICAgIHN0YXR1cy5zdHlsZS5jb2xvcj0ndmFyKC0tZ3JlZW4pJzsKICAgIGZsaXN0LmlubmVySFRNTD0nPGRpdiBjbGFzcz0ibm8tZmF1bHRzIj48ZGl2IGNsYXNzPSJuby1mYXVsdHMtaWNvbiI+4pyFPC9kaXY+PGRpdiBjbGFzcz0iZW1wdHktdGV4dCI+QWxsIENsZWFyPC9kaXY+PGRpdiBjbGFzcz0iZW1wdHktc3ViIj5ObyBmYXVsdCBjb2RlcyBkZXRlY3RlZCBpbiBFQ1U8L2Rpdj48L2Rpdj4nOwogIH1lbHNlewogICAgc3RhdHVzLnRleHRDb250ZW50PWDimqDvuI8gJHthY3RpdmVEVENzLmxlbmd0aH0gZmF1bHQgY29kZSR7YWN0aXZlRFRDcy5sZW5ndGg+MT8ncyc6Jyd9IGZvdW5kYDsKICAgIHN0YXR1cy5zdHlsZS5jb2xvcj0ndmFyKC0tcmVkKSc7CiAgICBjb25zdCBzZXZDb2xzPVsnJywnIzAwZDRmZicsJyNmZmFhMDAnLCcjZmY2YjAwJywnI2ZmMjI0NCddOwogICAgY29uc3Qgc2V2TGJscz1bJycsJ0lORk8nLCdXQVJOSU5HJywnU0VSSU9VUycsJ0NSSVRJQ0FMJ107CiAgICBmbGlzdC5pbm5lckhUTUw9YWN0aXZlRFRDcy5tYXAoZD0+ewogICAgICBjb25zdCBpbmZvPURUQ19EQltkLmNvZGVdfHx7bmFtZTonVW5rbm93biBDb2RlJyxzeXM6J1Vua25vd24nLHNldjoyLGZpeDonTm8gaW5mb3JtYXRpb24gYXZhaWxhYmxlLicsc3BlYzonTWVjaGFuaWMnfTsKICAgICAgY29uc3QgYz1zZXZDb2xzW2luZm8uc2V2XXx8JyNmZmFhMDAnOwogICAgICBjb25zdCBsYmw9c2V2TGJsc1tpbmZvLnNldl18fCdXQVJOSU5HJzsKICAgICAgcmV0dXJuIGA8ZGl2IHN0eWxlPSJiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzBhMTYyOCwjMGQxZjNjKTtib3JkZXI6MXB4IHNvbGlkICR7Y300NDtib3JkZXItcmFkaXVzOjEwcHg7cGFkZGluZzoxMnB4IDE0cHg7bWFyZ2luLWJvdHRvbTo4cHgiPgogICAgICAgIDxkaXYgc3R5bGU9ImRpc3BsYXk6ZmxleDtqdXN0aWZ5LWNvbnRlbnQ6c3BhY2UtYmV0d2VlbjthbGlnbi1pdGVtczpjZW50ZXI7bWFyZ2luLWJvdHRvbTo2cHgiPgogICAgICAgICAgPHNwYW4gc3R5bGU9ImZvbnQtZmFtaWx5Om1vbm9zcGFjZTtmb250LXNpemU6MTVweDtmb250LXdlaWdodDo3MDA7Y29sb3I6JHtjfTtsZXR0ZXItc3BhY2luZzoycHgiPiR7ZC5jb2RlfTwvc3Bhbj4KICAgICAgICAgIDxzcGFuIHN0eWxlPSJmb250LXNpemU6MTBweDtmb250LXdlaWdodDo3MDA7Y29sb3I6JHtjfTtiYWNrZ3JvdW5kOiR7Y30yMjtwYWRkaW5nOjJweCA4cHg7Ym9yZGVyLXJhZGl1czoxMHB4Ij4ke2xibH0ke2QucGVuZGluZz8nIMK3IFBFTkRJTkcnOicnfTwvc3Bhbj4KICAgICAgICA8L2Rpdj4KICAgICAgICA8ZGl2IHN0eWxlPSJmb250LXNpemU6MTNweDtmb250LXdlaWdodDo2MDA7Y29sb3I6dmFyKC0td2hpdGUpO21hcmdpbi1ib3R0b206NHB4Ij4ke2luZm8ubmFtZX08L2Rpdj4KICAgICAgICA8ZGl2IHN0eWxlPSJmb250LXNpemU6MTFweDtjb2xvcjp2YXIoLS1jeWFuKTttYXJnaW4tYm90dG9tOjZweCI+U3lzdGVtOiAke2luZm8uc3lzfTwvZGl2PgogICAgICAgIDxkaXYgc3R5bGU9ImZvbnQtc2l6ZToxMXB4O2NvbG9yOnZhcigtLWdyYXkpO2xpbmUtaGVpZ2h0OjEuNSI+JHtpbmZvLmZpeH08L2Rpdj4KICAgICAgICA8ZGl2IHN0eWxlPSJmb250LXNpemU6MTFweDtjb2xvcjp2YXIoLS15ZWxsb3cpO21hcmdpbi10b3A6NnB4Ij7wn5Go4oCN8J+UpyAke2luZm8uc3BlY308L2Rpdj4KICAgICAgPC9kaXY+YDsKICAgIH0pLmpvaW4oJycpOwogIH0KfQoKZnVuY3Rpb24gcGFyc2VEVENSZXNwb25zZShyYXcpewogIGNvbnN0IGxpbmVzPXJhdy5zcGxpdCgvW1xyXG5dKy8pLmZpbHRlcihsPT5sLnRyaW0oKSYmIWwuaW5jbHVkZXMoJz4nKSk7CiAgZm9yKGNvbnN0IGxpbmUgb2YgbGluZXMpewogICAgY29uc3QgaGV4PWxpbmUucmVwbGFjZSgvW1xzOl0vZywnJyk7CiAgICBpZighaGV4Lm1hdGNoKC9eWzAtOUEtRmEtZl0rJC8pKWNvbnRpbnVlOwogICAgbGV0IG9mZnNldD0wOwogICAgY29uc3QgdT1oZXgudG9VcHBlckNhc2UoKTsKICAgIGlmKHUuc3RhcnRzV2l0aCgnNDMnKSlvZmZzZXQ9MjtlbHNlIGNvbnRpbnVlOwogICAgZm9yKGxldCBpPW9mZnNldDtpPGhleC5sZW5ndGgtMztpKz00KXsKICAgICAgY29uc3QgYjE9cGFyc2VJbnQoaGV4LnN1YnN0cihpLDIpLDE2KTsKICAgICAgY29uc3QgYjI9cGFyc2VJbnQoaGV4LnN1YnN0cihpKzIsMiksMTYpOwogICAgICBpZihiMT09PTAmJmIyPT09MCljb250aW51ZTsKICAgICAgY29uc3QgdHlwZXM9WydQJywnQycsJ0InLCdVJ107CiAgICAgIGNvbnN0IGNvZGU9YCR7dHlwZXNbKGIxPj42KSYzXX0keyhiMT4+NCkmM30keyhiMSYweGYpLnRvU3RyaW5nKDE2KS50b1VwcGVyQ2FzZSgpfSR7KChiMj4+NCkmMHhmKS50b1N0cmluZygxNikudG9VcHBlckNhc2UoKX0keyhiMiYweGYpLnRvU3RyaW5nKDE2KS50b1VwcGVyQ2FzZSgpfWA7CiAgICAgIGFjdGl2ZURUQ3MucHVzaCh7Y29kZSxwZW5kaW5nOmZhbHNlfSk7CiAgICB9CiAgfQp9CgpmdW5jdGlvbiBjbGVhckRUQ3MoKXsKICBpZighUy5jb25uZWN0ZWQmJiFTLmRlbW8pe3Nob3dUb2FzdCgn4p2MIE5vdCBDb25uZWN0ZWQnLCdDb25uZWN0IE9CRCBkZXZpY2UgZmlyc3QnKTtyZXR1cm47fQogIGlmKFMuY29ubmVjdGVkKXNlbmRPQkQoJzA0XHInKTsKICBhY3RpdmVEVENzPVtdOwogIGNvbnN0IGZsaXN0PWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdmYXVsdC1saXN0Jyk7CiAgY29uc3Qgc3RhdHVzPWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdmYXVsdC1zdGF0dXMnKTsKICBmbGlzdC5pbm5lckhUTUw9JzxkaXYgY2xhc3M9Im5vLWZhdWx0cyI+PGRpdiBjbGFzcz0ibm8tZmF1bHRzLWljb24iPvCfl5HvuI88L2Rpdj48ZGl2IGNsYXNzPSJlbXB0eS10ZXh0Ij5Db2RlcyBDbGVhcmVkPC9kaXY+PGRpdiBjbGFzcz0iZW1wdHktc3ViIj5GYXVsdCBjb2RlcyByZW1vdmVkIGZyb20gRUNVPC9kaXY+PC9kaXY+JzsKICBzdGF0dXMudGV4dENvbnRlbnQ9J+KchSBGYXVsdCBjb2RlcyBjbGVhcmVkJzsKICBzdGF0dXMuc3R5bGUuY29sb3I9J3ZhcigtLWdyZWVuKSc7CiAgc2hvd1RvYXN0KCfinIUgQ2xlYXJlZCcsJ0ZhdWx0IGNvZGVzIGNsZWFyZWQgZnJvbSBFQ1UnKTsKfQo8L3NjcmlwdD4KCjxkaXYgaWQ9ImJ0LXBpY2tlciIgb25jbGljaz0iaWYoZXZlbnQudGFyZ2V0PT09dGhpcyljbG9zZUJUUGlja2VyKG51bGwpIj4KICA8ZGl2IGNsYXNzPSJidC1zaGVldCI+CiAgICA8ZGl2IGNsYXNzPSJidC1zaGVldC10aXRsZSI+8J+ToSBTRUxFQ1QgQkxVRVRPT1RIIERFVklDRTwvZGl2PgogICAgPGRpdiBpZD0iYnQtZGV2aWNlLWxpc3QiPjwvZGl2PgogICAgPGJ1dHRvbiBjbGFzcz0iYnQtY2FuY2VsIiBvbmNsaWNrPSJjbG9zZUJUUGlja2VyKG51bGwpIj7inJUgQ0FOQ0VMPC9idXR0b24+CiAgPC9kaXY+CjwvZGl2Pgo8L2JvZHk+CjwvaHRtbD4=','base64').toString('utf-8');
-          const modal   =Buffer.from('PGRpdiBpZD0iYnQtcGlja2VyIiBvbmNsaWNrPSJpZihldmVudC50YXJnZXQ9PT10aGlzKWNsb3NlQlRQaWNrZXIobnVsbCkiPgogIDxkaXYgY2xhc3M9ImJ0LXNoZWV0Ij4KICAgIDxkaXYgY2xhc3M9ImJ0LXNoZWV0LXRpdGxlIj7wn5OhIFNFTEVDVCBCTFVFVE9PVEggREVWSUNFPC9kaXY+CiAgICA8ZGl2IGlkPSJidC1kZXZpY2UtbGlzdCI+PC9kaXY+CiAgICA8YnV0dG9uIGNsYXNzPSJidC1jYW5jZWwiIG9uY2xpY2s9ImNsb3NlQlRQaWNrZXIobnVsbCkiPuKclSBDQU5DRUw8L2J1dHRvbj4KICA8L2Rpdj4KPC9kaXY+','base64').toString('utf-8');
-          const oldCon  =Buffer.from('YXdhaXQgQlQuY29ubmVjdEluc2VjdXJlKHthZGRyZXNzOmNob3Nlbi5hZGRyZXNzfSk7','base64').toString('utf-8');
-          const newCon  =Buffer.from('YXdhaXQgQlQuY29ubmVjdCh7YWRkcmVzczpjaG9zZW4uYWRkcmVzc30pOw==','base64').toString('utf-8');
-          const oldPids =Buffer.from('Y29uc3QgUElEUz1bJzAxMEQNJywnMDEwQw0nLCcwMTA1DScsJzAxMkYNJywnMDEwQg0nLCcwMTExDScsJzAxMDQNJywnMDEwRg0nLCcwMTQyDSddOw==','base64').toString('utf-8');
-          const newPids =Buffer.from('Y29uc3QgUElEUz1bJzAxMEQNJywnMDEwQw0nLCcwMTA1DScsJzAxMkYNJywnMDEwQg0nLCcwMTExDScsJzAxMDQNJywnMDEwRg0nLCcwMTQyDScsJ0FUUlYNJ107','base64').toString('utf-8');
-          const oldFault=Buffer.from('fSBlbHNlIGlmKFMuY29ubmVjdGVkJiZidENoYXIpew==','base64').toString('utf-8');
-          const newFault=Buffer.from('fSBlbHNlIGlmKFMuY29ubmVjdGVkJiYoYnRDaGFyfHxfYnRDbGFzc2ljKSl7','base64').toString('utf-8');
-          let c=fs.readFileSync(p,'utf-8'),x=false;
-          if(!c.includes('function finishScan')){const cut=c.lastIndexOf('flist.innerHTML=');if(cut!==-1){c=c.substring(0,cut)+tail;x=true;console.log('Fix1:tail');}}
-          if(!c.includes('id=\"bt-picker\"')){c=c.replace('</body>',modal+'\n</body>');x=true;console.log('Fix2:bt-picker');}
-          if(c.includes(oldCon)){c=c.replace(oldCon,newCon);x=true;console.log('Fix3:connect');}
-          if(!c.includes('requestPermissions')){c=c.replace('// Enable BT if off','try{ BT.requestPermissions(); }catch{}\n    // Enable BT if off');x=true;console.log('Fix4:perms');}
-          if(!c.includes('const sleep=')){c=c.replace('<script>','<script>\nconst sleep=ms=>new Promise(r=>setTimeout(r,ms));');x=true;console.log('Fix5:sleep');}
-          if(c.includes(oldPids)){c=c.replace(oldPids,newPids);x=true;console.log('Fix6:ATRV');}
-          if(!c.includes('atrvMatch')){c=c.replace('raw.split(/[\r\n]+/).forEach','const atrvMatch=raw.match(/(\d+\.\d+)V/i);if(atrvMatch){const v=parseFloat(atrvMatch[1]);if(v>5&&v<20)S.voltage=v;}\n  raw.split(/[\r\n]+/).forEach');x=true;console.log('Fix7:voltage');}
-          if(c.includes(oldFault)){c=c.replace(oldFault,newFault);x=true;console.log('Fix8:faults');}
-          if(!c.includes('S.connected&&!S.demo&&S.speed')){c=c.replace(\"document.getElementById('gear-d').textContent=S.gear;\",\"if(S.connected&&!S.demo&&S.speed>=0){S.gear=S.speed<3?'P':S.speed<15?'1':S.speed<35?'2':S.speed<65?'3':S.speed<100?'4':S.speed<130?'5':'6';}\ndocument.getElementById('gear-d').textContent=S.gear;\");x=true;console.log('Fix9:gear');}
-          if(!c.includes('wakeLock')){c=c.replace('setInterval(tickClock,1000);tickClock();','setInterval(tickClock,1000);tickClock();\n  let _wakeLock=null;\n  async function acquireWakeLock(){try{if(\"wakeLock\" in navigator){_wakeLock=await navigator.wakeLock.request(\"screen\");_wakeLock.addEventListener(\"release\",()=>{_wakeLock=null;});}}catch(e){}}\n  acquireWakeLock();\n  document.addEventListener(\"visibilitychange\",async()=>{if(document.visibilityState===\"visible\"){acquireWakeLock();if(S.connected&&(btChar||_btClassic)&&!obdPoll)startPoll();}else{if(_wakeLock){try{await _wakeLock.release();}catch{}_wakeLock=null;}}});');x=true;console.log('Fix10:wakelock');}
-          if(x)fs.writeFileSync(p,c,'utf-8');else console.log('No fixes needed');
-          "
-
       - name: Add Android platform
         run: npx cap add android
 
@@ -72,21 +45,65 @@ jobs:
         run: npx cap sync android
 
       - name: Generate app icons
-        run: echo "CmltcG9ydCBzdWJwcm9jZXNzLG9zLG1hdGgKdHJ5OgogICAgZnJvbSBQSUwgaW1wb3J0IEltYWdlLEltYWdlRHJhdwpleGNlcHQ6CiAgICBzdWJwcm9jZXNzLnJ1bihbInBpcCIsImluc3RhbGwiLCJQaWxsb3ciLCItLWJyZWFrLXN5c3RlbS1wYWNrYWdlcyIsIi1xIl0pCiAgICBmcm9tIFBJTCBpbXBvcnQgSW1hZ2UsSW1hZ2VEcmF3CgpkZWYgZHJhd19nZWFyKGRyYXcsY3gsY3kscmFkaXVzLHRlZXRoLHRvb3RoX2gsaG9sZV9yLGNvbG9yKToKICAgIHB0cz1bXQogICAgbj10ZWV0aCo0CiAgICBmb3IgaSBpbiByYW5nZShuKToKICAgICAgICBhPTIqbWF0aC5waSppL24tbWF0aC5waS9uCiAgICAgICAgcj1yYWRpdXMrdG9vdGhfaCBpZiAoaSU0IGluIFsxLDJdKSBlbHNlIHJhZGl1cwogICAgICAgIHB0cy5hcHBlbmQoKGN4K3IqbWF0aC5jb3MoYSksY3krciptYXRoLnNpbihhKSkpCiAgICBkcmF3LnBvbHlnb24ocHRzLGZpbGw9Y29sb3IpCiAgICBkcmF3LmVsbGlwc2UoW2N4LWhvbGVfcixjeS1ob2xlX3IsY3graG9sZV9yLGN5K2hvbGVfcl0sZmlsbD0iYmxhY2siKQoKc2l6ZXM9eyJtZHBpIjo0OCwiaGRwaSI6NzIsInhoZHBpIjo5NiwieHhoZHBpIjoxNDQsInh4eGhkcGkiOjE5Mn0KZm9yIGRwaSxzeiBpbiBzaXplcy5pdGVtcygpOgogICAgZm9yIGZuYW1lIGluIFsiaWNfbGF1bmNoZXIucG5nIiwiaWNfbGF1bmNoZXJfcm91bmQucG5nIl06CiAgICAgICAgaW1nPUltYWdlLm5ldygiUkdCQSIsKHN6LHN6KSwoMCwwLDAsMjU1KSkKICAgICAgICBkPUltYWdlRHJhdy5EcmF3KGltZykKICAgICAgICBzPXN6LzE5MgogICAgICAgIGRyYXdfZ2VhcihkLGludCg3NSpzKSxpbnQoMTE1KnMpLGludCg1OCpzKSwxMCxpbnQoMTEqcyksaW50KDMyKnMpLCIjMTU2NUMwIikKICAgICAgICBkcmF3X2dlYXIoZCxpbnQoMTI4KnMpLGludCg3MipzKSxpbnQoNDYqcyksOCxpbnQoOSpzKSxpbnQoMjUqcyksIiM0Q0FGNTAiKQogICAgICAgIG9zLm1ha2VkaXJzKGYiYW5kcm9pZC9hcHAvc3JjL21haW4vcmVzL21pcG1hcC17ZHBpfSIsZXhpc3Rfb2s9VHJ1ZSkKICAgICAgICBpbWcuc2F2ZShmImFuZHJvaWQvYXBwL3NyYy9tYWluL3Jlcy9taXBtYXAte2RwaX0ve2ZuYW1lfSIpCnByaW50KCJJY29ucyBkb25lIikK" | base64 -d > /tmp/mkicons.py && pip install Pillow --break-system-packages -q && python3 /tmp/mkicons.py
+        run: |
+          pip install Pillow --break-system-packages -q
+          python3 - << 'PYEOF'
+          import os, math
+          from PIL import Image, ImageDraw
+
+          def draw_gear(draw, cx, cy, radius, teeth, tooth_h, hole_r, color):
+              pts = []
+              n = teeth * 4
+              for i in range(n):
+                  a = 2 * math.pi * i / n - math.pi / n
+                  r = radius + tooth_h if (i % 4 in [1, 2]) else radius
+                  pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
+              draw.polygon(pts, fill=color)
+              draw.ellipse([cx-hole_r, cy-hole_r, cx+hole_r, cy+hole_r], fill=(0,0,0,255))
+
+          sizes = {"mdpi": 48, "hdpi": 72, "xhdpi": 96, "xxhdpi": 144, "xxxhdpi": 192}
+          for dpi, sz in sizes.items():
+              for fname in ["ic_launcher.png", "ic_launcher_round.png"]:
+                  img = Image.new("RGBA", (sz, sz), (0, 0, 0, 255))
+                  d = ImageDraw.Draw(img)
+                  s = sz / 192
+                  draw_gear(d, int(75*s), int(115*s), int(58*s), 10, int(11*s), int(32*s), "#1565C0")
+                  draw_gear(d, int(128*s), int(72*s), int(46*s), 8, int(9*s), int(25*s), "#4CAF50")
+                  out = "android/app/src/main/res/mipmap-" + dpi
+                  os.makedirs(out, exist_ok=True)
+                  img.save(out + "/" + fname)
+          print("Icons done")
+          PYEOF
 
       - name: Patch MainActivity for background keep-alive
-        run: echo "CnBhdGg9ImFuZHJvaWQvYXBwL3NyYy9tYWluL2phdmEvY29tL29iZGRhc2hib2FyZC9hcHAvTWFpbkFjdGl2aXR5LmphdmEiCndpdGggb3BlbihwYXRoKSBhcyBmOiBjPWYucmVhZCgpCmlmICJvblBhdXNlIiBub3QgaW4gYzoKICAgIGM9Yy5yZXBsYWNlKAogICAgICAgICJwdWJsaWMgY2xhc3MgTWFpbkFjdGl2aXR5IGV4dGVuZHMgQnJpZGdlQWN0aXZpdHkge30iLAogICAgICAgICIiInB1YmxpYyBjbGFzcyBNYWluQWN0aXZpdHkgZXh0ZW5kcyBCcmlkZ2VBY3Rpdml0eSB7CiAgICBAT3ZlcnJpZGUKICAgIHByb3RlY3RlZCB2b2lkIG9uUGF1c2UoKSB7CiAgICAgICAgc3VwZXIub25QYXVzZSgpOwogICAgICAgIGlmKGdldEJyaWRnZSgpIT1udWxsJiZnZXRCcmlkZ2UoKS5nZXRXZWJWaWV3KCkhPW51bGwpewogICAgICAgICAgICBnZXRCcmlkZ2UoKS5nZXRXZWJWaWV3KCkub25SZXN1bWUoKTsKICAgICAgICB9CiAgICB9Cn0iIiIKICAgICkKICAgIHdpdGggb3BlbihwYXRoLCJ3IikgYXMgZjogZi53cml0ZShjKQogICAgcHJpbnQoIk1haW5BY3Rpdml0eSBwYXRjaGVkIikKZWxzZToKICAgIHByaW50KCJBbHJlYWR5IHBhdGNoZWQiKQo=" | base64 -d > /tmp/patch_main.py && python3 /tmp/patch_main.py
+        run: |
+          python3 - << 'PYEOF'
+          path = "android/app/src/main/java/com/obddashboard/app/MainActivity.java"
+          with open(path) as f:
+              c = f.read()
+          if "onPause" not in c:
+              patched = c.replace(
+                  "public class MainActivity extends BridgeActivity {}",
+                  "public class MainActivity extends BridgeActivity {\n    @Override\n    protected void onPause() {\n        super.onPause();\n        if (getBridge() != null && getBridge().getWebView() != null) {\n            getBridge().getWebView().onResume();\n        }\n    }\n}"
+              )
+              with open(path, "w") as f:
+                  f.write(patched)
+              print("MainActivity patched")
+          else:
+              print("Already patched")
+          PYEOF
 
       - name: Add Bluetooth + screen permissions
         run: |
           FILE="android/app/src/main/AndroidManifest.xml"
           if ! grep -q "BLUETOOTH_CONNECT" "$FILE"; then
             sed -i 's|    <application|    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />\n    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.WAKE_LOCK" />\n    <application|' "$FILE"
+            echo "Bluetooth permissions added"
           fi
           if ! grep -q "keepScreenOn" "$FILE"; then
             sed -i 's|android:exported="true">|android:exported="true"\n            android:keepScreenOn="true">|' "$FILE"
+            echo "keepScreenOn added"
           fi
-          echo "Manifest updated"
 
       - name: Update app name
         run: |
