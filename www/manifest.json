@@ -1,5 +1,5 @@
 {
-  "name": "OBD Dashboard",
+  "name": "Craft Car Dashboard",
   "short_name": "OBD HUD",
   "description": "Vehicle OBD2 Dashboard with GPS Navigation",
   "start_url": "./OBD-Dashboard.html",
