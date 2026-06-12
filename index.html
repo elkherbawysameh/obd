@@ -1163,6 +1163,7 @@ async function _tryGetChar(svc, uuids){
 
 let btDevice=null, btChar=null, obdBuf='', obdPoll=null, _btClassic=null, _btClassicAddress=null, _btReadListener=null;
 let _odoTimer=null, _odoLastTime=0;
+let _lastDataTime=0, _watchdog=null;   // watchdog: detect dead BT connection
 function startOdoTimer(){
   clearInterval(_odoTimer);
   _odoLastTime=Date.now();
@@ -1261,6 +1262,7 @@ function onOBDData(e){
 }
 
 function parseOBD(raw){
+  _lastDataTime=Date.now();   // heartbeat — used by watchdog
   // Handle ATRV response (battery voltage e.g. "12.4V")
   const atrvMatch=raw.match(/(\d+\.\d+)V/i);
   if(atrvMatch){const v=parseFloat(atrvMatch[1]);if(v>5&&v<20)S.voltage=v;}
@@ -1296,13 +1298,53 @@ function parseOBD(raw){
 const PIDS=['010D\r','010C\r','0105\r','012F\r','010B\r','0111\r','0104\r','010F\r','0142\r','ATRV\r'];
 let pidI=0;
 function startPoll(){clearInterval(obdPoll);obdPoll=setInterval(async()=>{if(S.connected&&(btChar||_btClassic))await sendOBD(PIDS[pidI++%PIDS.length]);},200);}
-function onDisconnect(){S.connected=false;clearInterval(obdPoll);clearInterval(_odoTimer);if(_btReadListener){_btReadListener.remove();_btReadListener=null;}_btClassic=null;_btClassicAddress=null;setOBDBtn('off');showToast('🔌 Disconnected','Signal lost');}
+function onDisconnect(){S.connected=false;clearInterval(obdPoll);clearInterval(_odoTimer);clearInterval(_watchdog);_watchdog=null;if(_btReadListener){_btReadListener.remove();_btReadListener=null;}_btClassic=null;_btClassicAddress=null;setOBDBtn('off');showToast('🔌 Disconnected','Signal lost');}
 async function disconnectOBD(){
-  clearInterval(obdPoll);
+  clearInterval(obdPoll);clearInterval(_watchdog);_watchdog=null;
   if(_btClassic){try{if(_btReadListener){_btReadListener.remove();_btReadListener=null;}await _btClassic.stopNotifications({address:_btClassicAddress});await _btClassic.disconnect({address:_btClassicAddress});}catch{}_btClassic=null;_btClassicAddress=null;}
   if(btDevice?.gatt?.connected){try{await btDevice.gatt.disconnect();}catch{}}
   S.connected=false;setOBDBtn('off');
 }
+function startWatchdog(){
+  clearInterval(_watchdog);
+  _watchdog=setInterval(async()=>{
+    if(!S.connected||S.demo)return;
+    if((Date.now()-_lastDataTime)>8000)await _doReconnect();
+  },4000);
+}
+
+async function _doReconnect(){
+  if(!_btClassicAddress){S.connected=false;setOBDBtn('off');return;}
+  const addr=_btClassicAddress;
+  clearInterval(obdPoll);obdPoll=null;
+  clearInterval(_odoTimer);_odoTimer=null;
+  try{
+    const BT=getCapBT();if(!BT)return;
+    if(_btReadListener){_btReadListener.remove();_btReadListener=null;}
+    try{await BT.stopNotifications({address:addr});}catch{}
+    try{await BT.disconnect({address:addr});}catch{}
+    S.connected=false;await sleep(1200);
+    await BT.connect({address:addr});
+    _btClassic=BT;_btClassicAddress=addr;
+    await BT.startNotifications({address:addr,delimiter:'>'});
+    _btReadListener=BT.addListener('onRead',(data)=>{
+      const val=data.value||'';obdBuf+=val;
+      if(obdBuf.includes('>')){parseOBD(obdBuf);obdBuf='';}
+    });
+    S.connected=true;setOBDBtn('live');
+    _lastDataTime=Date.now();
+    const cmds=['ATE0\r','ATSP0\r'];
+    for(const c of cmds){await sendOBD(c);await sleep(200);}
+    startPoll();startOdoTimer();startWatchdog();
+    showToast('✅ Reconnected','OBD connection restored');
+  }catch(e){
+    S.connected=false;_btClassic=null;_btClassicAddress=null;
+    clearInterval(_watchdog);_watchdog=null;
+    setOBDBtn('off');
+    showToast('⚠️ OBD Lost','Tap CONNECT to reconnect');
+  }
+}
+
 function toggleOBD(){
   if(S.connected){disconnectOBD();return;}
   if(getCapBT()){connectOBD_Classic();}else{connectOBD();}
@@ -1401,9 +1443,9 @@ function render(){
   const rate=S.tripDist>0?(S.tripFuelUsed/S.tripDist*100).toFixed(1):'--';
   document.getElementById('st-fuel-rate').textContent=rate;
   // AC & Battery health
-  document.getElementById('ac-v').textContent=S.acEfficiency>0?S.acEfficiency+'%':'--';
-
-  document.getElementById('bh-v').style.color=S.battHealth<60?'var(--red)':S.battHealth<80?'var(--orange)':'var(--green)';
+  // (ac-v and bh-v elements removed — null-safe guard kept for legacy)
+  const _acEl=document.getElementById('ac-v');if(_acEl)_acEl.textContent=S.acEfficiency>0?S.acEfficiency+'%':'--';
+  const _bhEl=document.getElementById('bh-v');if(_bhEl)_bhEl.style.color=S.battHealth<60?'var(--red)':S.battHealth<80?'var(--orange)':'var(--green)';
 
   // Fuel bar
   const fp=Math.round(S.fuel);
@@ -2233,8 +2275,10 @@ async function connectOBD_Classic(){
     const cmds=['ATZ\r','ATE0\r','ATL0\r','ATSP0\r','ATAT1\r'];
     for(const c of cmds){await sendOBD(c);await sleep(300);}
     const _cv=getCurrentVehicle();if(_cv&&_cv.odometer)S.odometer=_cv.odometer;
+    _lastDataTime=Date.now();
     startPoll();
     startOdoTimer();
+    startWatchdog();
 
   }catch(e){
     _btClassic=null;_btClassicAddress=null;
@@ -2275,28 +2319,17 @@ function enterApp(){
     if(document.visibilityState==='visible'){
       acquireWakeLock();
       if(S.connected&&(btChar||_btClassic)){
-        if(!obdPoll)startPoll();
-        if(!_odoTimer)startOdoTimer();
+        // Check if connection is stale (no data for >6 sec)
+        if(_btClassic&&(Date.now()-_lastDataTime)>6000){
+          await _doReconnect();
+        } else {
+          if(!obdPoll)startPoll();
+          if(!_odoTimer)startOdoTimer();
+          if(!_watchdog)startWatchdog();
+        }
       } else if(!S.connected&&_btClassicAddress){
         // Auto-reconnect after call/app switch
-        showToast('🔄 Reconnecting...','Restoring OBD connection...');
-        try{
-          const BT=getCapBT();
-          await BT.connect({address:_btClassicAddress});
-          _btClassic=BT;
-          await BT.startNotifications({address:_btClassicAddress,delimiter:'>'});
-          if(_btReadListener){_btReadListener.remove();}
-          _btReadListener=BT.addListener('onRead',(data)=>{
-            const val=data.value||'';obdBuf+=val;
-            if(obdBuf.includes('>')){parseOBD(obdBuf);obdBuf='';}
-          });
-          S.connected=true;setOBDBtn('live');
-          showToast('✅ Reconnected','OBD connection restored');
-          startPoll();startOdoTimer();
-        }catch(e){
-          _btClassicAddress=null;
-          showToast('⚠️ Disconnected','OBD lost — tap CONNECT to retry');
-        }
+        await _doReconnect();
       }
     } else {
       if(_wakeLock){try{await _wakeLock.release();}catch{}_wakeLock=null;}
