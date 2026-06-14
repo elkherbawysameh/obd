@@ -154,10 +154,20 @@ jobs:
             sed -i 's|android:exported="true">|android:exported="true"\n            android:keepScreenOn="true">|' "$FILE"
             echo "keepScreenOn added"
           fi
-          if ! grep -q "supportsPictureInPicture" "$FILE"; then
-            sed -i 's|android:keepScreenOn="true">|android:keepScreenOn="true"\n            android:supportsPictureInPicture="true"\n            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation">|' "$FILE"
-            echo "PiP support added to AndroidManifest"
-          fi
+          python3 - "$FILE" << 'PYEOF'
+          import sys
+          path = sys.argv[1]
+          c = open(path).read()
+          if 'supportsPictureInPicture' not in c:
+              c = c.replace(
+                  'android:keepScreenOn="true">',
+                  'android:keepScreenOn="true"\n            android:supportsPictureInPicture="true"\n            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation">'
+              )
+              open(path, 'w').write(c)
+              print("PiP support added to AndroidManifest")
+          else:
+              print("PiP already present")
+          PYEOF
 
       - name: Update app name
         run: |
