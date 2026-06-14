@@ -610,6 +610,42 @@ canvas{display:block}
 .bt-empty{text-align:center;padding:30px;color:var(--gray)}
 .bt-empty-icon{font-size:40px;margin-bottom:10px}
 
+
+/* ═══ PiP OVERLAY ═══ */
+#pip-overlay{display:none;position:fixed;inset:0;z-index:9999;background:#050a18;flex-direction:column;align-items:center;justify-content:space-around;padding:16px 20px}
+.pip-big{font-size:72px;font-weight:900;color:var(--cyan);text-shadow:0 0 24px #00d4ff55;line-height:1;text-align:center;font-variant-numeric:tabular-nums}
+.pip-unit{font-size:12px;color:var(--gray);letter-spacing:3px;text-align:center}
+.pip-row{display:flex;gap:28px;justify-content:center}
+.pip-stat{text-align:center}
+.pip-num{font-size:26px;font-weight:700;line-height:1}
+.pip-lbl{font-size:9px;color:var(--gray);letter-spacing:1px;margin-top:3px;text-transform:uppercase}
+
+/* ═══ CAR QUICK-LAUNCH PANEL ═══ */
+#car-panel{display:none;position:fixed;bottom:56px;left:0;right:0;z-index:180;background:linear-gradient(to top,#020810f8,#07101ff2);border-top:1px solid #0a244d;padding:12px 10px;backdrop-filter:blur(24px)}
+#car-panel.active{display:block}
+.car-phdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.car-ptitle{font-size:8px;color:var(--gray);letter-spacing:3px;text-transform:uppercase}
+.car-pclose{font-size:16px;cursor:pointer;padding:2px 8px;color:var(--gray);opacity:.6;line-height:1}
+.car-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+.cbn{background:linear-gradient(158deg,#18274a 0%,#0b1426 100%);border:1px solid #1d3158;border-radius:10px;box-shadow:3px 5px 10px #00000088,-1px -1px 3px #1e3060,inset 0 0 0 1px #ffffff04,inset 0 1.5px 0 #2e508844;padding:10px 3px 16px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;transition:all .12s ease;user-select:none}
+.cbn::before{content:'';position:absolute;top:0;left:16%;right:16%;height:1px;background:linear-gradient(90deg,transparent,#4a7acc44,transparent)}
+.cbn-led{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:12px;height:3px;border-radius:2px;background:var(--cyan);box-shadow:0 0 6px var(--cyan);opacity:0;transition:opacity .3s}
+.cbn.lit .cbn-led{opacity:1}
+.cbn.lit-g .cbn-led{background:var(--green);box-shadow:0 0 6px var(--green);opacity:1}
+.cbn:active{transform:scale(0.88) translateY(3px);box-shadow:1px 2px 4px #000000bb,inset 0 3px 7px #00000066}
+.cbn-icon{font-size:20px;line-height:1;pointer-events:none}
+.cbn-lbl{font-size:6px;color:#384e6a;letter-spacing:.5px;text-transform:uppercase;text-align:center;line-height:1.2;max-width:46px;pointer-events:none}
+.cbn.cbn-add{border-style:dashed;border-color:#101828;background:transparent;box-shadow:none}
+.cbn.cbn-add .cbn-icon,.cbn.cbn-add .cbn-lbl{opacity:.2}
+
+/* ═══ DOOR STATUS ═══ */
+.door-strip{display:flex;gap:4px;width:100%;margin-top:5px}
+.door-box{flex:1;background:#060f1e;border:1px solid #0d1c32;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5px 2px;cursor:pointer;transition:all .2s;gap:2px}
+.door-box.open{background:#250008;border-color:var(--red);box-shadow:0 0 8px #ff224422;animation:blink 1s step-end infinite}
+.door-box.open .door-di{filter:drop-shadow(0 0 4px var(--red))}
+.door-di{font-size:13px;line-height:1}
+.door-dlbl{font-size:6px;color:var(--gray);letter-spacing:.5px;text-transform:uppercase}
+
 /* Scrollbar */
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 </style>
@@ -650,7 +686,7 @@ canvas{display:block}
     </div>
     <div class="topbar-right">
       <div class="top-action-btn map-btn" id="top-map-btn" onclick="toggleMap()" title="GPS Map">🗺️</div>
-      <div class="top-action-btn sc-btn" onclick="toggleShortcuts()" title="App Shortcuts">📱</div>
+      <div class="top-action-btn sc-btn" onclick="toggleCarPanel()" title="Quick Launch">📱</div>
       <button class="obd-btn off" id="obd-btn" onclick="toggleOBD()">⚡ CONNECT</button>
       <div class="set-btn" onclick="openSettings()">⚙️</div>
     </div>
@@ -764,6 +800,32 @@ canvas{display:block}
             <div class="stat-lbl">A/C EFF%</div>
           </div>
           -->
+
+          <!-- Door Status (OBD2 standard doesn't have door PIDs — manual + demo only) -->
+          <div class="stat" style="grid-column:span 4;flex-direction:column;align-items:stretch;padding:6px 5px 5px;cursor:default">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+              <div style="font-size:9px;color:var(--gray);letter-spacing:1px;text-transform:uppercase">🚪 DOORS / TRUNK</div>
+              <div id="doors-status" style="font-size:9px;font-weight:700;color:var(--green)">ALL CLOSED</div>
+            </div>
+            <div class="door-strip">
+              <div class="door-box" id="door-fl" onclick="toggleDoorManual('fl')" title="Front Left">
+                <div class="door-di">🚗</div><div class="door-dlbl">FRONT-L</div>
+              </div>
+              <div class="door-box" id="door-fr" onclick="toggleDoorManual('fr')" title="Front Right">
+                <div class="door-di">🚗</div><div class="door-dlbl">FRONT-R</div>
+              </div>
+              <div class="door-box" id="door-rl" onclick="toggleDoorManual('rl')" title="Rear Left">
+                <div class="door-di">🚪</div><div class="door-dlbl">REAR-L</div>
+              </div>
+              <div class="door-box" id="door-rr" onclick="toggleDoorManual('rr')" title="Rear Right">
+                <div class="door-di">🚪</div><div class="door-dlbl">REAR-R</div>
+              </div>
+              <div class="door-box" id="door-trunk" onclick="toggleDoorManual('trunk')" title="Trunk/Boot">
+                <div class="door-di">🧳</div><div class="door-dlbl">TRUNK</div>
+              </div>
+            </div>
+            <div style="font-size:7px;color:#0d1e36;text-align:center;margin-top:3px">Tap to mark open • Live OBD2 door detection is vehicle-dependent</div>
+          </div>
 
         </div>
       </div>
@@ -905,19 +967,30 @@ canvas{display:block}
 
 <!-- FLOATING BTNS -->
 <div class="fab" id="fab-map" onclick="toggleMap()">🗺️</div>
-<div class="fab" id="fab-sc" onclick="toggleShortcuts()">📱</div>
+<div class="fab" id="fab-sc" onclick="toggleCarPanel()">📱</div>
 
-<!-- SHORTCUTS PANEL -->
-<div id="sc-panel">
-  <div id="sc-items"><!-- filled --></div>
-  <div class="sc-item" style="background:var(--green-dim);border-color:var(--green)" onclick="openScAddModal()">
-    <div class="sc-icon">➕</div><div class="sc-name">ADD</div>
+<!-- CAR QUICK-LAUNCH PANEL -->
+<div id="car-panel">
+  <div class="car-phdr">
+    <div class="car-ptitle">⚡ QUICK LAUNCH</div>
+    <div class="car-pclose" onclick="toggleCarPanel()">✕</div>
   </div>
-  <div class="sc-item" id="sc-edit-toggle" onclick="toggleScEdit()">
-    <div class="sc-icon">✏️</div><div class="sc-name">EDIT</div>
-  </div>
-  <div class="sc-item" style="background:var(--red-dim);border-color:var(--red)" onclick="toggleShortcuts()">
-    <div class="sc-icon">✕</div><div class="sc-name">CLOSE</div>
+  <div class="car-grid" id="car-btns"></div>
+</div>
+
+<!-- Car Button Edit Modal -->
+<div id="cb-modal" onclick="if(event.target===this)closeCarBtnModal()" style="display:none;position:fixed;inset:0;z-index:500;background:#000000cc;align-items:center;justify-content:center">
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;width:88%;max-width:340px">
+    <div style="font-size:15px;font-weight:700;color:var(--cyan);margin-bottom:14px;text-align:center">🔧 Customize Button</div>
+    <div class="form-group"><label class="form-label">Icon (emoji)</label><input type="text" class="form-input" id="cb-icon" placeholder="📱" maxlength="4"></div>
+    <div class="form-group"><label class="form-label">Label</label><input type="text" class="form-input" id="cb-name" placeholder="APP NAME"></div>
+    <div class="form-group"><label class="form-label">URL / Deep Link</label><input type="url" class="form-input" id="cb-url" placeholder="https://... or whatsapp://..."></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:12px">
+      <button class="btn-primary" onclick="saveCarBtn()">SAVE</button>
+      <button style="padding:10px;background:var(--red-dim);border:1px solid var(--red);border-radius:8px;color:var(--white);font-size:12px;font-weight:700;cursor:pointer" onclick="clearCarBtn()">CLEAR</button>
+      <button class="btn-cancel" onclick="closeCarBtnModal()">CANCEL</button>
+    </div>
+    <div style="font-size:9px;color:var(--gray);margin-top:10px;text-align:center">💡 Hold button 0.6s to customize</div>
   </div>
 </div>
 
@@ -1119,7 +1192,7 @@ const S = {
   speed:0, rpm:0, coolant:0, fuel:0, oil:0, throttle:0, load:0, voltage:0,
   fanSpeed:0, acEfficiency:0, battHealth:0, alternator:0, chargingV:0,
   gear:'P', driveMode:'NORMAL',
-  doors:{fl:false,fr:false,rl:false,rr:false},
+  doors:{fl:false,fr:false,rl:false,rr:false,trunk:false},
   odometer:0, tripDist:0, tripFuelUsed:0, tripStartTime:null,
   runtime:0, connected:false, demo:false, gaugeMode:'analog',
   unit:'kmh', alertSound:'beep', volume:.8, tankSize:50,
@@ -1351,6 +1424,37 @@ async function _doReconnect(){
   }
 }
 
+// ════════════════════════════════════════════════
+//  AUTO-CONNECT (last saved device, no dialog)
+// ════════════════════════════════════════════════
+async function _autoConnect(addr, name){
+  const BT=getCapBT(); if(!BT) return;
+  setOBDBtn('connecting');
+  try{
+    try{await BT.requestPermissions();}catch{}
+    for(let a=1;a<=3;a++){
+      try{await BT.connect({address:addr});break;}
+      catch(e){if(a===3)throw e;await sleep(800);}
+    }
+    _btClassic=BT; _btClassicAddress=addr;
+    if(_btReadListener){_btReadListener.remove();_btReadListener=null;}
+    await BT.startNotifications({address:addr,delimiter:'>'});
+    _btReadListener=BT.addListener('onRead',(data)=>{
+      const val=data.value||'';obdBuf+=val;
+      if(obdBuf.includes('>')){parseOBD(obdBuf);obdBuf='';}
+    });
+    S.connected=true; setOBDBtn('live');
+    showToast('✅ Auto-Connected', name||addr);
+    const cmds=['ATZ\r','ATE0\r','ATL0\r','ATSP0\r','ATAT1\r'];
+    for(const c of cmds){await sendOBD(c);await sleep(300);}
+    const _cv=getCurrentVehicle();if(_cv&&_cv.odometer)S.odometer=_cv.odometer;
+    _lastDataTime=Date.now(); startPoll(); startOdoTimer(); startWatchdog();
+  }catch(e){
+    setOBDBtn('off');
+    // Don't clear saved address — BT may just be temporarily unavailable
+  }
+}
+
 function toggleOBD(){
   if(S.connected){disconnectOBD();return;}
   if(getCapBT()){connectOBD_Classic();}else{connectOBD();}
@@ -1394,7 +1498,22 @@ function runDemo(){
   if(Math.round(S.odometer*10)%100===0){const cv=getCurrentVehicle();if(cv){cv.odometer=S.odometer;saveVehicles();}}
   // Fuel consumption (rough: ~0.08L/km)
   if(S.speed>0){S.tripFuelUsed+=S.speed/3600*.1*.09;}
+  // Demo: simulate door events occasionally
+  if(Math.random()<0.002){const ds=['fl','fr','rl','rr','trunk'];S.doors[ds[Math.floor(Math.random()*ds.length)]]=Math.random()>.5;}
   render(); checkAlerts();
+}
+
+// ════════════════════════════════════════════════
+//  DOOR MANUAL TOGGLE (OBD2 standard has no door PIDs — manual mode)
+// ════════════════════════════════════════════════
+function toggleDoorManual(door){
+  S.doors[door]=!S.doors[door];
+  render();
+  if(S.doors[door]){
+    playAlert('door');
+    const labels={fl:'Front-Left',fr:'Front-Right',rl:'Rear-Left',rr:'Rear-Right',trunk:'Trunk'};
+    showToast('🚪 '+labels[door],'Door/Trunk open!');
+  }
 }
 
 // ════════════════════════════════════════════════
@@ -1494,6 +1613,25 @@ function render(){
   warnIcon('wi-oil',S.oil>0&&S.oil<100);
   const anyDoor=Object.values(S.doors).some(Boolean);
   warnIcon('wi-door',anyDoor);
+
+  // Door strip UI
+  ['fl','fr','rl','rr','trunk'].forEach(d=>{
+    const el=document.getElementById('door-'+d);
+    if(el)el.classList.toggle('open',!!S.doors[d]);
+  });
+  const dsEl=document.getElementById('doors-status');
+  if(dsEl){dsEl.textContent=anyDoor?'⚠️ DOOR OPEN':'ALL CLOSED';dsEl.style.color=anyDoor?'var(--red)':'var(--green)';}
+
+  // PiP overlay (shown when Android enters Picture-in-Picture mode)
+  const pipOv=document.getElementById('pip-overlay');
+  if(pipOv&&pipOv.style.display==='flex'){
+    const spd2=S.unit==='mph'?Math.round(S.speed*.621371):S.speed;
+    const ps=document.getElementById('pip-spd');if(ps)ps.textContent=spd2;
+    const pu=document.getElementById('pip-unit');if(pu)pu.textContent=S.unit==='mph'?'mph':'km/h';
+    const pr=document.getElementById('pip-rpm');if(pr)pr.textContent=(Math.round(S.rpm/100)/10).toFixed(1)+'k';
+    const pg2=document.getElementById('pip-gear');if(pg2)pg2.textContent=S.gear;
+    const pc=document.getElementById('pip-ct');if(pc)pc.textContent=(S.coolant>0||S.demo?S.coolant:'--')+'°';
+  }
 
   // Check maintenance alerts
   checkMaintAlerts();
@@ -1640,50 +1778,84 @@ function toggleMap(){const ov=document.getElementById('map-overlay');ov.classLis
 function closeMap(){document.getElementById('map-overlay').classList.remove('active');}
 
 // ════════════════════════════════════════════════
-//  SHORTCUTS
+//  CAR QUICK-LAUNCH BUTTONS (6 total: 2 fixed + 4 custom)
 // ════════════════════════════════════════════════
-const SC_PRESETS=[
-  {icon:'📞',name:'Phone',url:'tel:'},
-  {icon:'🗺️',name:'Maps',url:'https://maps.google.com'},
-  {icon:'🎵',name:'Music',url:'music:'},
-  {icon:'💬',name:'Messages',url:'sms:'},
-  {icon:'🚗',name:'Waze',url:'waze://'},
-  {icon:'🎧',name:'Spotify',url:'spotify:'},
-  {icon:'📷',name:'Camera',url:'intent://camera'},
-  {icon:'🌤️',name:'Weather',url:'https://weather.com'},
+const CAR_FIXED=[
+  {icon:'📞',name:'PHONE',  url:'tel:',                        lit:'lit-g'},
+  {icon:'🗺️',name:'G.MAPS', url:'https://maps.google.com',     lit:'lit'},
 ];
-let shortcuts=[], scEditMode=false;
+const CAR_DEFAULTS=[
+  {icon:'💬',name:'WHATSAPP',url:'https://wa.me'},
+  {icon:'🎵',name:'ANGHAMI', url:'https://play.anghami.com'},
+  {icon:'📧',name:'EMAIL',   url:'mailto:'},
+  {icon:'🌤️',name:'WEATHER', url:'https://weather.com'},
+];
+let carCustom=[], _carLongTimer=null, _editCarSlot=-1;
 
-function loadShortcuts(){
-  try{shortcuts=JSON.parse(localStorage.getItem('obd_shortcuts')||'null')||[...SC_PRESETS.slice(0,4)];}catch{shortcuts=[...SC_PRESETS.slice(0,4)];}
-  renderShortcuts();
+function loadCarBtns(){
+  try{carCustom=JSON.parse(localStorage.getItem('obd_car_btns')||'null')||[...CAR_DEFAULTS];}
+  catch{carCustom=[...CAR_DEFAULTS];}
+  while(carCustom.length<4)carCustom.push(null);
+  renderCarBtns();
 }
-function saveShortcuts(){try{localStorage.setItem('obd_shortcuts',JSON.stringify(shortcuts));}catch{}}
-function renderShortcuts(){
-  const cont=document.getElementById('sc-items');cont.innerHTML='';cont.className=scEditMode?'sc-edit-mode':'';
-  shortcuts.forEach((sc,i)=>{
-    const d=document.createElement('div');d.className='sc-item';
-    d.innerHTML=`<div class="sc-icon">${sc.icon}</div><div class="sc-name">${sc.name}</div><div class="sc-del" onclick="delShortcut(${i})">✕</div>`;
-    if(!scEditMode)d.addEventListener('click',()=>openSC(sc));
-    cont.appendChild(d);
-  });
+function saveCarBtns(){try{localStorage.setItem('obd_car_btns',JSON.stringify(carCustom));}catch{}}
+
+function renderCarBtns(){
+  const grid=document.getElementById('car-btns');if(!grid)return;
+  const all=[...CAR_FIXED,...carCustom.slice(0,4)];
+  grid.innerHTML=all.map((b,i)=>{
+    if(!b)return`<div class="cbn cbn-add" onclick="editCarBtn(${i})"><div class="cbn-icon">＋</div><div class="cbn-lbl">CUSTOM</div><div class="cbn-led"></div></div>`;
+    const cls=`cbn${(i<2&&b.lit)?' '+b.lit:''}`;
+    return`<div class="${cls}" onclick="launchCarBtn(${i})" onpointerdown="carBtnDown(${i})" onpointerup="carBtnUp()" onpointerleave="carBtnUp()" onpointercancel="carBtnUp()"><div class="cbn-icon">${b.icon}</div><div class="cbn-lbl">${b.name}</div><div class="cbn-led"></div></div>`;
+  }).join('');
 }
-function openSC(sc){try{window.location.href=sc.url;}catch{showToast('📱 '+sc.name,'Opening...');}}
-function toggleShortcuts(){document.getElementById('sc-panel').classList.toggle('active');scEditMode=false;renderShortcuts();}
-function toggleScEdit(){scEditMode=!scEditMode;renderShortcuts();}
-function delShortcut(i){shortcuts.splice(i,1);saveShortcuts();renderShortcuts();}
-function openScAddModal(){
-  document.getElementById('sc-name-inp').value='';document.getElementById('sc-icon-inp').value='';document.getElementById('sc-url-inp').value='';
-  const pg=document.getElementById('sc-presets');pg.innerHTML='';
-  SC_PRESETS.forEach(p=>{const d=document.createElement('div');d.className='preset-item';d.innerHTML=`<span class="pi">${p.icon}</span>${p.name}`;d.onclick=()=>{document.getElementById('sc-name-inp').value=p.name;document.getElementById('sc-icon-inp').value=p.icon;document.getElementById('sc-url-inp').value=p.url;};pg.appendChild(d);});
-  document.getElementById('sc-add-modal').classList.add('active');
+
+function launchCarBtn(i){
+  clearTimeout(_carLongTimer);
+  const all=[...CAR_FIXED,...carCustom];
+  const b=all[i];if(!b)return;
+  try{window.location.href=b.url;}catch{showToast('📱 '+b.name,'Opening...');}
 }
-function closeScModal(){document.getElementById('sc-add-modal').classList.remove('active');}
-function closeScModalBg(e){if(e.target===document.getElementById('sc-add-modal'))closeScModal();}
-function addShortcut(){
-  const name=document.getElementById('sc-name-inp').value.trim(),icon=document.getElementById('sc-icon-inp').value.trim()||'📱',url=document.getElementById('sc-url-inp').value.trim();
-  if(!name)return;shortcuts.push({icon,name,url:url||'#'});saveShortcuts();renderShortcuts();closeScModal();
+function carBtnDown(i){
+  if(i<2)return;
+  clearTimeout(_carLongTimer);
+  _carLongTimer=setTimeout(()=>editCarBtn(i),600);
 }
+function carBtnUp(){clearTimeout(_carLongTimer);}
+
+function editCarBtn(slot){
+  if(slot<2)return;
+  _editCarSlot=slot;
+  const b=carCustom[slot-2];
+  const eI=document.getElementById('cb-icon');
+  const eN=document.getElementById('cb-name');
+  const eU=document.getElementById('cb-url');
+  if(eI)eI.value=b?.icon||'';
+  if(eN)eN.value=b?.name||'';
+  if(eU)eU.value=b?.url||'';
+  const m=document.getElementById('cb-modal');if(m)m.style.display='flex';
+}
+function saveCarBtn(){
+  if(_editCarSlot<2)return;
+  const ci=_editCarSlot-2;
+  const icon=(document.getElementById('cb-icon')?.value.trim()||'📱').slice(0,4);
+  const name=(document.getElementById('cb-name')?.value.trim()||'APP').toUpperCase().slice(0,10);
+  const url=document.getElementById('cb-url')?.value.trim()||'#';
+  carCustom[ci]={icon,name,url};
+  saveCarBtns();renderCarBtns();closeCarBtnModal();
+}
+function clearCarBtn(){
+  if(_editCarSlot<2)return;
+  carCustom[_editCarSlot-2]=null;
+  saveCarBtns();renderCarBtns();closeCarBtnModal();
+}
+function closeCarBtnModal(){const m=document.getElementById('cb-modal');if(m)m.style.display='none';}
+function toggleCarPanel(){
+  const p=document.getElementById('car-panel');if(p)p.classList.toggle('active');
+}
+// Legacy stubs (may be referenced elsewhere)
+function toggleShortcuts(){toggleCarPanel();}
+function loadShortcuts(){loadCarBtns();}
 
 // ════════════════════════════════════════════════
 //  SETTINGS
@@ -2276,6 +2448,8 @@ async function connectOBD_Classic(){
     S.connected=true;
     setOBDBtn('live');
     showToast('✅ OBD Connected', chosen.name||'ELM327');
+    // Save for auto-connect on next launch
+    try{localStorage.setItem('obd_last_addr',chosen.address);localStorage.setItem('obd_last_name',chosen.name||'ELM327');}catch{}
 
     // Init ELM327
     const cmds=['ATZ\r','ATE0\r','ATL0\r','ATSP0\r','ATAT1\r'];
@@ -2307,7 +2481,7 @@ function enterApp(){
   document.getElementById('splash').classList.remove('active');
   document.getElementById('dashboard').classList.add('active');
   // topbar map/sc buttons are always visible
-  loadVehicles();loadSettings();loadShortcuts();loadMaint();loadMechanics();
+  loadVehicles();loadSettings();loadCarBtns();loadMaint();loadMechanics();
   setInterval(tickClock,1000);tickClock();
 
   // Keep screen on while app is active
@@ -2321,6 +2495,32 @@ function enterApp(){
     }catch(e){console.warn('WakeLock:',e.message);}
   }
   acquireWakeLock();
+
+  // ── Auto-connect to last saved OBD device ──
+  setTimeout(async()=>{
+    const lastAddr=localStorage.getItem('obd_last_addr');
+    const lastName=localStorage.getItem('obd_last_name')||'ELM327';
+    if(lastAddr&&getCapBT()&&!S.connected&&!S.demo){
+      showToast('🔄 Auto-connecting...',lastName);
+      await _autoConnect(lastAddr,lastName);
+    }
+  },2000);
+
+  // ── PiP mode handler (Android MainActivity dispatches 'pipmode') ──
+  document.addEventListener('pipmode',(e)=>{
+    const isActive=!!(e.detail&&e.detail.active);
+    const pipOv=document.getElementById('pip-overlay');
+    const dash=document.getElementById('dashboard');
+    if(pipOv)pipOv.style.display=isActive?'flex':'none';
+    // Show/hide main dashboard content
+    if(dash){
+      const inner=dash.querySelector('.topbar')?.parentElement||dash;
+      Array.from(dash.children).forEach(c=>{
+        if(c.id!=='pip-overlay')c.style.display=isActive?'none':'';
+      });
+    }
+  });
+
   document.addEventListener('visibilitychange',async()=>{
     if(document.visibilityState==='visible'){
       acquireWakeLock();
@@ -2580,5 +2780,28 @@ function clearDTCs(){
     <button class="bt-cancel" onclick="closeBTPicker(null)">✕ CANCEL</button>
   </div>
 </div>
+
+<!-- ═══ PiP OVERLAY (Android Picture-in-Picture mode) ═══ -->
+<div id="pip-overlay">
+  <div>
+    <div class="pip-big" id="pip-spd">0</div>
+    <div class="pip-unit" id="pip-unit">km/h</div>
+  </div>
+  <div class="pip-row">
+    <div class="pip-stat">
+      <div class="pip-num" id="pip-rpm" style="color:var(--orange)">0.0k</div>
+      <div class="pip-lbl">RPM</div>
+    </div>
+    <div class="pip-stat">
+      <div class="pip-num" id="pip-gear" style="color:var(--cyan)">P</div>
+      <div class="pip-lbl">GEAR</div>
+    </div>
+    <div class="pip-stat">
+      <div class="pip-num" id="pip-ct" style="color:var(--cyan)">--°</div>
+      <div class="pip-lbl">COOLANT</div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
