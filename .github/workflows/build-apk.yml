@@ -89,25 +89,61 @@ jobs:
           print("Icons done" + (" (from logo.png)" if use_logo else " (generated)"))
           PYEOF
 
-      - name: Patch MainActivity for background keep-alive
+      - name: Patch MainActivity — keep-alive + Picture-in-Picture
         run: |
           python3 - << 'PYEOF'
           path = "android/app/src/main/java/com/obddashboard/app/MainActivity.java"
           with open(path) as f:
               c = f.read()
-          if "onPause" not in c:
+          if "onUserLeaveHint" not in c:
+              pip_class = """public class MainActivity extends BridgeActivity {
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().onResume();
+        }
+    }
+
+    @Override
+    public void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            android.app.PictureInPictureParams.Builder b =
+                new android.app.PictureInPictureParams.Builder();
+            b.setAspectRatio(new android.util.Rational(9, 16));
+            enterPictureInPictureMode(b.build());
+        }
+    }
+
+    @Override
+    public void onPictureInPictureModeChanged(
+            boolean pip, android.content.res.Configuration cfg) {
+        super.onPictureInPictureModeChanged(pip, cfg);
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            final String js =
+                "document.dispatchEvent(new CustomEvent(" +
+                "'pipmode',{detail:{active:" + pip + "}}));";
+            getBridge().getWebView().post(new Runnable() {
+                public void run() {
+                    getBridge().getWebView().evaluateJavascript(js, null);
+                }
+            });
+        }
+    }
+}"""
               patched = c.replace(
                   "public class MainActivity extends BridgeActivity {}",
-                  "public class MainActivity extends BridgeActivity {\n    @Override\n    public void onPause() {\n        super.onPause();\n        if (getBridge() != null && getBridge().getWebView() != null) {\n            getBridge().getWebView().onResume();\n        }\n    }\n}"
+                  pip_class
               )
               with open(path, "w") as f:
                   f.write(patched)
-              print("MainActivity patched")
+              print("MainActivity patched: keep-alive + PiP")
           else:
               print("Already patched")
           PYEOF
 
-      - name: Add Bluetooth + screen permissions
+      - name: Add Bluetooth + screen + PiP permissions
         run: |
           FILE="android/app/src/main/AndroidManifest.xml"
           if ! grep -q "BLUETOOTH_CONNECT" "$FILE"; then
@@ -117,6 +153,10 @@ jobs:
           if ! grep -q "keepScreenOn" "$FILE"; then
             sed -i 's|android:exported="true">|android:exported="true"\n            android:keepScreenOn="true">|' "$FILE"
             echo "keepScreenOn added"
+          fi
+          if ! grep -q "supportsPictureInPicture" "$FILE"; then
+            sed -i 's|android:keepScreenOn="true">|android:keepScreenOn="true"\n            android:supportsPictureInPicture="true"\n            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation">|' "$FILE"
+            echo "PiP support added to AndroidManifest"
           fi
 
       - name: Update app name
