@@ -32,8 +32,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--wh
     width:65px;
     height:65px;
     object-fit:contain;
-}
-.sp-title{font-size:26px;font-weight:700;letter-spacing:4px;color:var(--cyan);text-shadow:var(--gc)}
+}.sp-title{font-size:26px;font-weight:700;letter-spacing:4px;color:var(--cyan);text-shadow:var(--gc)}
 .sp-sub{font-size:12px;color:var(--gray);letter-spacing:2px}
 .sp-btn{margin-top:20px;padding:13px 38px;background:linear-gradient(135deg,#0a3a6e,var(--blue));border:1px solid var(--cyan);border-radius:30px;color:var(--white);font-size:15px;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:var(--gc);transition:all .3s}
 .sp-btn:active{transform:scale(0.97)}
@@ -277,7 +276,7 @@ select.sel{background:var(--card);border:1px solid var(--border);color:var(--whi
 canvas{display:block}
 /* Main speed/RPM gauges: fill container HEIGHT, auto width → no clipping */
 #spd-cv,#rpm-cv{height:100%;width:auto;aspect-ratio:1.35/1;max-width:100%}
-#ct-cv{width:100%;height:55px;flex-shrink:0}
+#ct-cv{width:100%;height:90px;display:block}
 
 /* ── FAULTS PAGE ── */
 #faults-page{background:var(--bg);overflow:hidden}
@@ -654,7 +653,8 @@ canvas{display:block}
 
 <!-- ═══ SPLASH ═══ -->
 <div id="splash" class="screen active">
-  <div class="sp-logo">
+
+ <div class="sp-logo">
     <img src="logo.png" alt="Craft Innovations Logo">
 </div>
   <div class="sp-title">CRAFT CAR DASHBOARD</div>
@@ -784,22 +784,22 @@ canvas{display:block}
             <div class="stat-val" id="st-fuel-rate" style="color:var(--yellow);font-size:13px">--</div>
             <div class="stat-lbl">L/100km</div>
           </div>
-          <!-- Coolant temp (prominent) -->
-          <div class="stat" style="grid-column:span 2;flex-direction:row;gap:8px;justify-content:space-between">
-            <div style="display:flex;flex-direction:column;align-items:flex-start">
-              <div style="font-size:10px;color:var(--gray);letter-spacing:1px;text-transform:uppercase">🌡️ COOLANT TEMP</div>
-              <div id="ct-val" style="font-size:26px;font-weight:900;color:var(--cyan);text-shadow:var(--gc);line-height:1;margin-top:3px">🌡️ -- °C</div>
+          <!-- Coolant temp (full-width large gauge) -->
+          <div class="stat" style="grid-column:span 4;flex-direction:column;align-items:center;padding:8px 10px 4px;position:relative;min-height:110px">
+            <div style="font-size:9px;color:var(--gray);letter-spacing:2px;text-transform:uppercase;align-self:flex-start;margin-bottom:2px">🌡️ COOLANT TEMP</div>
+            <div style="position:relative;width:100%;display:flex;align-items:center;justify-content:center">
+              <canvas id="ct-cv" style="width:100%;height:90px;display:block"></canvas>
+              <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none">
+                <div id="ct-val" style="font-size:30px;font-weight:900;color:var(--cyan);text-shadow:0 0 16px #00d4ff88;line-height:1;font-variant-numeric:tabular-nums">--°C</div>
+                <div style="font-size:8px;color:var(--gray);letter-spacing:1px;margin-top:2px">ENGINE COOLANT</div>
+              </div>
             </div>
-            <canvas id="ct-cv" width="70" height="55"></canvas>
+            <div style="display:flex;justify-content:space-between;width:100%;padding:0 10px;margin-top:-2px">
+              <span style="font-size:8px;color:var(--gray)">40°C</span>
+              <span style="font-size:8px;color:var(--orange)">NORMAL 80–95°</span>
+              <span style="font-size:8px;color:var(--red)">130°C</span>
+            </div>
           </div>
-          <!-- AC Efficiency -->
-          <!--
-          <div class="stat">
-            <div class="stat-icon">❄️</div>
-            <div class="stat-val" id="ac-v" style="color:var(--blue)">--</div>
-            <div class="stat-lbl">A/C EFF%</div>
-          </div>
-          -->
 
           <!-- Door Status (OBD2 standard doesn't have door PIDs — manual + demo only) -->
           <div class="stat" style="grid-column:span 4;flex-direction:column;align-items:stretch;padding:6px 5px 5px;cursor:default">
@@ -1557,7 +1557,7 @@ function render(){
   // Coolant temp gauge + big display
   const ct=S.coolant;
   const ctColor=ct>S.thresholds.temp?'var(--red)':ct>90?'var(--orange)':'var(--cyan)';
-  document.getElementById('ct-val').textContent=(ct>0||S.demo)?'🌡️ '+ct+'°C':'🌡️ -- °C';
+  document.getElementById('ct-val').textContent=(ct>0||S.demo)?ct+'°C':'--°C';
   document.getElementById('ct-val').style.color=ctColor;
   drawCoolantGauge('ct-cv',ct);
 
@@ -1625,12 +1625,39 @@ function render(){
   // PiP overlay (shown when Android enters Picture-in-Picture mode)
   const pipOv=document.getElementById('pip-overlay');
   if(pipOv&&pipOv.style.display==='flex'){
-    const spd2=S.unit==='mph'?Math.round(S.speed*.621371):S.speed;
-    const ps=document.getElementById('pip-spd');if(ps)ps.textContent=spd2;
-    const pu=document.getElementById('pip-unit');if(pu)pu.textContent=S.unit==='mph'?'mph':'km/h';
-    const pr=document.getElementById('pip-rpm');if(pr)pr.textContent=(Math.round(S.rpm/100)/10).toFixed(1)+'k';
-    const pg2=document.getElementById('pip-gear');if(pg2)pg2.textContent=S.gear;
-    const pc=document.getElementById('pip-ct');if(pc)pc.textContent=(S.coolant>0||S.demo?S.coolant:'--')+'°';
+    // Coolant
+    const pipCt=document.getElementById('pip-ct');
+    const pipCtColor=S.coolant>S.thresholds.temp?'var(--red)':S.coolant>90?'var(--orange)':'var(--cyan)';
+    if(pipCt){pipCt.textContent=(S.coolant>0||S.demo?S.coolant:'--')+'°C';pipCt.style.color=pipCtColor;}
+    // Coolant mini-bar
+    const pipCtCv=document.getElementById('pip-ct-cv');
+    if(pipCtCv){
+      const pctx=pipCtCv.getContext('2d');const pw=pipCtCv.width;
+      const pp=Math.min(1,Math.max(0,(S.coolant-40)/(130-40)));
+      pctx.clearRect(0,0,pw,pipCtCv.height);
+      pctx.fillStyle='#1a2a4a';pctx.roundRect(0,2,pw,10,5);pctx.fill();
+      const barColor=S.coolant>S.thresholds.temp?'#ff2244':S.coolant>90?'#ff6b00':'#00d4ff';
+      pctx.fillStyle=barColor;pctx.shadowColor=barColor;pctx.shadowBlur=6;
+      pctx.roundRect(0,2,pw*pp,10,5);pctx.fill();pctx.shadowBlur=0;
+    }
+    // Dynamo
+    const pipDyn=document.getElementById('pip-dyn');
+    const pipDynPct=document.getElementById('pip-dyn-pct');
+    const dynColor=S.alternator<30?'var(--red)':S.alternator<60?'var(--orange)':'var(--cyan)';
+    if(pipDyn){pipDyn.textContent=S.chargingV>0?S.chargingV+'V':'--V';pipDyn.style.color=dynColor;}
+    if(pipDynPct){pipDynPct.textContent=S.alternator>0?S.alternator+'%':'--%';}
+    // Fan
+    const pipFan=document.getElementById('pip-fan');
+    const fanColor=S.fanSpeed>80?'var(--red)':S.fanSpeed>50?'var(--orange)':'var(--green)';
+    if(pipFan){pipFan.textContent=S.fanSpeed>0?S.fanSpeed+'%':'--%';pipFan.style.color=fanColor;}
+    const pipFanCv=document.getElementById('pip-fan-cv');
+    if(pipFanCv){
+      const fctx=pipFanCv.getContext('2d');const fw=pipFanCv.width;
+      fctx.clearRect(0,0,fw,pipFanCv.height);
+      fctx.fillStyle='#1a2a4a';fctx.roundRect(0,0,fw,6,3);fctx.fill();
+      fctx.fillStyle=fanColor;fctx.shadowColor=fanColor;fctx.shadowBlur=4;
+      fctx.roundRect(0,0,fw*S.fanSpeed/100,6,3);fctx.fill();fctx.shadowBlur=0;
+    }
   }
 
   // Check maintenance alerts
@@ -1686,21 +1713,73 @@ function drawGauge(id,val,mn,mx,c1,c2){
 
 function drawCoolantGauge(id,val){
   const cv=document.getElementById(id);if(!cv)return;
-  const cw=cv.offsetWidth||70;
-  const ch=cv.offsetHeight||Math.round(cw*0.78);
+  const cw=cv.offsetWidth||cv.clientWidth||280;
+  const ch=cv.offsetHeight||cv.clientHeight||90;
   if(cv.width!==cw||cv.height!==ch){cv.width=cw;cv.height=ch;}
   const ctx=cv.getContext('2d');
-  const W=cv.width,H=cv.height,cx=W/2,cy=H*.62,R=Math.min(W,H)*0.38;
-  const lw=Math.max(3,Math.round(W*.07));
+  const W=cv.width,H=cv.height;
+  // centre of arc slightly above bottom so arc fills nicely
+  const cx=W/2, cy=H*0.88, R=Math.min(W*0.44,H*1.05);
+  const lw=Math.max(5,Math.round(W*.025));
   ctx.clearRect(0,0,W,H);
-  const sa=Math.PI*.8,ea=Math.PI*2.2,range=ea-sa,pct=Math.min(1,Math.max(0,(val-40)/(130-40))),va=sa+range*pct;
-  const color=val>S.thresholds.temp?'#ff2244':val>90?'#ff6b00':'#00d4ff';
-  ctx.beginPath();ctx.arc(cx,cy,R,sa,ea);ctx.strokeStyle='#1a2a4a';ctx.lineWidth=lw;ctx.lineCap='round';ctx.stroke();
-  ctx.beginPath();ctx.arc(cx,cy,R,sa,va);ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.lineCap='round';ctx.shadowColor=color;ctx.shadowBlur=8;ctx.stroke();ctx.shadowBlur=0;
+
+  const sa=Math.PI*1.05, ea=Math.PI*1.95;
+  const range=ea-sa;
+  const pct=Math.min(1,Math.max(0,(val-40)/(130-40)));
+  const va=sa+range*pct;
+  const color=val>(S&&S.thresholds?S.thresholds.temp:105)?'#ff2244':val>90?'#ff6b00':'#00d4ff';
+
+  // Tick marks
+  const ticks=[40,60,80,95,110,130];
+  ticks.forEach(t=>{
+    const tp=Math.min(1,Math.max(0,(t-40)/(130-40)));
+    const ta=sa+range*tp;
+    const isCrit=t>=105;
+    const r1=R+lw*.6, r2=R+lw*1.4;
+    ctx.beginPath();
+    ctx.moveTo(cx+r1*Math.cos(ta),cy+r1*Math.sin(ta));
+    ctx.lineTo(cx+r2*Math.cos(ta),cy+r2*Math.sin(ta));
+    ctx.strokeStyle=isCrit?'#ff224488':'#2a3a5a';
+    ctx.lineWidth=Math.max(1,lw*.3);ctx.stroke();
+  });
+
+  // Background track
+  ctx.beginPath();ctx.arc(cx,cy,R,sa,ea);
+  ctx.strokeStyle='#111e33';ctx.lineWidth=lw+2;ctx.lineCap='round';ctx.stroke();
+
+  // Normal zone (80–95) subtle highlight
+  const nsa=sa+range*Math.max(0,(80-40)/(130-40));
+  const nea=sa+range*Math.min(1,(95-40)/(130-40));
+  ctx.beginPath();ctx.arc(cx,cy,R,nsa,nea);
+  ctx.strokeStyle='#00ff4422';ctx.lineWidth=lw+4;ctx.lineCap='butt';ctx.stroke();
+
+  // Danger zone (105+)
+  const dsa=sa+range*(65/90);
+  ctx.beginPath();ctx.arc(cx,cy,R,dsa,ea);
+  ctx.strokeStyle='#ff224411';ctx.lineWidth=lw+2;ctx.lineCap='butt';ctx.stroke();
+
+  // Filled arc
+  if(pct>0){
+    const grad=ctx.createLinearGradient(cx-R,cy,cx+R,cy);
+    grad.addColorStop(0,'#00d4ff');grad.addColorStop(.6,'#00d4ff');
+    grad.addColorStop(.85,'#ff6b00');grad.addColorStop(1,'#ff2244');
+    ctx.beginPath();ctx.arc(cx,cy,R,sa,va);
+    ctx.strokeStyle=grad;ctx.lineWidth=lw;ctx.lineCap='round';
+    ctx.shadowColor=color;ctx.shadowBlur=10;ctx.stroke();ctx.shadowBlur=0;
+  }
+
+  // Needle
   ctx.save();ctx.translate(cx,cy);ctx.rotate(va);
-  const nw=Math.max(1,W*.02);
-  ctx.beginPath();ctx.moveTo(-4,-nw);ctx.lineTo(R*.7,0);ctx.lineTo(-4,nw);ctx.closePath();ctx.fillStyle=color;ctx.fill();ctx.restore();
-  ctx.beginPath();ctx.arc(cx,cy,Math.max(3,W*.04),0,Math.PI*2);ctx.fillStyle='#4a6080';ctx.fill();
+  ctx.beginPath();ctx.moveTo(-6,0);ctx.lineTo(R*.72,0);
+  ctx.strokeStyle=color;ctx.lineWidth=Math.max(2,lw*.35);
+  ctx.shadowColor=color;ctx.shadowBlur=8;ctx.lineCap='round';ctx.stroke();ctx.shadowBlur=0;
+  ctx.restore();
+
+  // Centre dot
+  ctx.beginPath();ctx.arc(cx,cy,Math.max(4,lw*.55),0,Math.PI*2);
+  ctx.fillStyle='#4a6080';ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,Math.max(2,lw*.25),0,Math.PI*2);
+  ctx.fillStyle='#8ab0d0';ctx.fill();
 }
 
 // ════════════════════════════════════════════════
@@ -2542,7 +2621,7 @@ function enterApp(){
     }
   });
   render();
-  setTimeout(()=>{drawGauge('spd-cv',0,0,220,'#00d4ff','#1a6fff');drawGauge('rpm-cv',0,0,8000,'#ff6b00','#ff2244');drawCoolantGauge('ct-cv',0);},120);
+  setTimeout(()=>{drawGauge('spd-cv',0,0,220,'#00d4ff','#1a6fff');drawGauge('rpm-cv',0,0,8000,'#ff6b00','#ff2244');drawCoolantGauge('ct-cv',40);},150);
   S.tripStartTime=Date.now();
 }
 
@@ -2727,7 +2806,7 @@ function finishScan(){
       const info=DTC_DB[d.code]||{name:'Unknown Code',sys:'Unknown',sev:2,fix:'No information available.',spec:'Mechanic'};
       const c=sevCols[info.sev]||'#ffaa00';
       const lbl=sevLbls[info.sev]||'WARNING';
-      return `<div style="background:linear-gradient(135deg,#0a1628,#0d1f3c);border:1px solid ${c}44;border-radius:10px;padding:12px 14px;margin-bottom:8px">
+        return `<div style="background:linear-gradient(135deg,#0a1628,#0d1f3c);border:1px solid ${c}44;border-radius:10px;padding:12px 14px;margin-bottom:8px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <span style="font-family:monospace;font-size:15px;font-weight:700;color:${c};letter-spacing:2px">${d.code}</span>
           <span style="font-size:10px;font-weight:700;color:${c};background:${c}22;padding:2px 8px;border-radius:10px">${lbl}${d.pending?' · PENDING':''}</span>
@@ -2781,24 +2860,29 @@ function clearDTCs(){
   </div>
 </div>
 
-<!-- ═══ PiP OVERLAY (Android Picture-in-Picture mode) ═══ -->
 <div id="pip-overlay">
-  <div>
-    <div class="pip-big" id="pip-spd">0</div>
-    <div class="pip-unit" id="pip-unit">km/h</div>
+  <div style="text-align:center;margin-bottom:6px">
+    <div style="font-size:9px;color:#4a6080;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px">ENGINE COOLANT</div>
+    <div id="pip-ct" style="font-size:64px;font-weight:900;color:var(--cyan);text-shadow:0 0 28px #00d4ff66;line-height:1;font-variant-numeric:tabular-nums">--°C</div>
+    <canvas id="pip-ct-cv" width="220" height="14" style="width:220px;height:14px;margin-top:6px;display:block;margin-left:auto;margin-right:auto"></canvas>
   </div>
-  <div class="pip-row">
-    <div class="pip-stat">
-      <div class="pip-num" id="pip-rpm" style="color:var(--orange)">0.0k</div>
-      <div class="pip-lbl">RPM</div>
+  <div style="display:flex;gap:20px;justify-content:center;width:100%">
+    <div style="background:#0d1f3a;border:1px solid #1d3158;border-radius:12px;padding:12px 18px;text-align:center;flex:1">
+      <div style="font-size:9px;color:#4a6080;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">⚡ DYNAMO</div>
+      <div id="pip-dyn" style="font-size:26px;font-weight:800;color:var(--cyan);line-height:1">--V</div>
+      <div id="pip-dyn-pct" style="font-size:10px;color:#4a6080;margin-top:3px">--%</div>
     </div>
-    <div class="pip-stat">
-      <div class="pip-num" id="pip-gear" style="color:var(--cyan)">P</div>
-      <div class="pip-lbl">GEAR</div>
+    <div style="background:#0d1f3a;border:1px solid #1d3158;border-radius:12px;padding:12px 18px;text-align:center;flex:1">
+      <div style="font-size:9px;color:#4a6080;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">💨 FAN</div>
+      <div id="pip-fan" style="font-size:26px;font-weight:800;color:var(--green);line-height:1">--%</div>
+      <canvas id="pip-fan-cv" width="60" height="6" style="width:60px;height:6px;margin-top:5px;border-radius:3px;display:block;margin-left:auto;margin-right:auto"></canvas>
     </div>
-    <div class="pip-stat">
-      <div class="pip-num" id="pip-ct" style="color:var(--cyan)">--°</div>
-      <div class="pip-lbl">COOLANT</div>
+  </div>
+</div>
+
+</body>
+</html>
+:5px;border-radius:3px;display:block;margin-left:auto;margin-right:auto"></canvas>
     </div>
   </div>
 </div>
