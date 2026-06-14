@@ -89,49 +89,49 @@ jobs:
           print("Icons done" + (" (from logo.png)" if use_logo else " (generated)"))
           PYEOF
 
-      - name: Patch MainActivity — keep-alive + Picture-in-Picture
+      - name: Patch MainActivity - keep-alive + Picture-in-Picture
         run: |
           python3 - << 'PYEOF'
+          import textwrap
           path = "android/app/src/main/java/com/obddashboard/app/MainActivity.java"
           with open(path) as f:
               c = f.read()
           if "onUserLeaveHint" not in c:
-              pip_class = """public class MainActivity extends BridgeActivity {
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (getBridge() != null && getBridge().getWebView() != null) {
-            getBridge().getWebView().onResume();
-        }
-    }
-
-    @Override
-    public void onUserLeaveHint() {
-        super.onUserLeaveHint();
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            android.app.PictureInPictureParams.Builder b =
-                new android.app.PictureInPictureParams.Builder();
-            b.setAspectRatio(new android.util.Rational(9, 16));
-            enterPictureInPictureMode(b.build());
-        }
-    }
-
-    @Override
-    public void onPictureInPictureModeChanged(
-            boolean pip, android.content.res.Configuration cfg) {
-        super.onPictureInPictureModeChanged(pip, cfg);
-        if (getBridge() != null && getBridge().getWebView() != null) {
-            final String js =
-                "document.dispatchEvent(new CustomEvent(" +
-                "'pipmode',{detail:{active:" + pip + "}}));";
-            getBridge().getWebView().post(new Runnable() {
-                public void run() {
-                    getBridge().getWebView().evaluateJavascript(js, null);
-                }
-            });
-        }
-    }
-}"""
+              pip_class = textwrap.dedent("""
+                  public class MainActivity extends BridgeActivity {
+                      @Override
+                      public void onPause() {
+                          super.onPause();
+                          if (getBridge() != null && getBridge().getWebView() != null) {
+                              getBridge().getWebView().onResume();
+                          }
+                      }
+                      @Override
+                      public void onUserLeaveHint() {
+                          super.onUserLeaveHint();
+                          if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                              android.app.PictureInPictureParams.Builder b =
+                                  new android.app.PictureInPictureParams.Builder();
+                              b.setAspectRatio(new android.util.Rational(9, 16));
+                              enterPictureInPictureMode(b.build());
+                          }
+                      }
+                      @Override
+                      public void onPictureInPictureModeChanged(
+                              boolean pip, android.content.res.Configuration cfg) {
+                          super.onPictureInPictureModeChanged(pip, cfg);
+                          if (getBridge() != null && getBridge().getWebView() != null) {
+                              final String js =
+                                  "document.dispatchEvent(new CustomEvent(" +
+                                  "'pipmode',{detail:{active:" + pip + "}}));";
+                              getBridge().getWebView().post(new Runnable() {
+                                  public void run() {
+                                      getBridge().getWebView().evaluateJavascript(js, null);
+                                  }
+                              });
+                          }
+                      }
+                  }""").lstrip()
               patched = c.replace(
                   "public class MainActivity extends BridgeActivity {}",
                   pip_class
