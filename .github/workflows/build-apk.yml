@@ -87,53 +87,67 @@ jobs:
           PYEOF
 
       - name: Patch MainActivity - keep-alive + Picture-in-Picture
+        run: echo 'aW1wb3J0IHRleHR3cmFwCnBhdGggPSAiYW5kcm9pZC9hcHAvc3JjL21haW4vamF2YS9jb20vb2JkZGFzaGJvYXJkL2FwcC9NYWluQWN0aXZpdHkuamF2YSIKYyA9IG9wZW4ocGF0aCkucmVhZCgpCmlmICJvblVzZXJMZWF2ZUhpbnQiIG5vdCBpbiBjOgogICAgcGlwX2NsYXNzID0gKAogICAgICAgICJwdWJsaWMgY2xhc3MgTWFpbkFjdGl2aXR5IGV4dGVuZHMgQnJpZGdlQWN0aXZpdHkge1xuIgogICAgICAgICIgICAgQE92ZXJyaWRlXG4iCiAgICAgICAgIiAgICBwdWJsaWMgdm9pZCBvblBhdXNlKCkge1xuIgogICAgICAgICIgICAgICAgIHN1cGVyLm9uUGF1c2UoKTtcbiIKICAgICAgICAiICAgICAgICBpZiAoZ2V0QnJpZGdlKCkgIT0gbnVsbCAmJiBnZXRCcmlkZ2UoKS5nZXRXZWJWaWV3KCkgIT0gbnVsbCkge1xuIgogICAgICAgICIgICAgICAgICAgICBnZXRCcmlkZ2UoKS5nZXRXZWJWaWV3KCkub25SZXN1bWUoKTtcbiIKICAgICAgICAiICAgICAgICB9XG4iCiAgICAgICAgIiAgICB9XG4iCiAgICAgICAgIiAgICBAT3ZlcnJpZGVcbiIKICAgICAgICAiICAgIHB1YmxpYyB2b2lkIG9uVXNlckxlYXZlSGludCgpIHtcbiIKICAgICAgICAiICAgICAgICBzdXBlci5vblVzZXJMZWF2ZUhpbnQoKTtcbiIKICAgICAgICAiICAgICAgICBpZiAoYW5kcm9pZC5vcy5CdWlsZC5WRVJTSU9OLlNES19JTlQgPj0gYW5kcm9pZC5vcy5CdWlsZC5WRVJTSU9OX0NPREVTLk8pIHtcbiIKICAgICAgICAiICAgICAgICAgICAgYW5kcm9pZC5hcHAuUGljdHVyZUluUGljdHVyZVBhcmFtcy5CdWlsZGVyIGIgPVxuIgogICAgICAgICIgICAgICAgICAgICAgICAgbmV3IGFuZHJvaWQuYXBwLlBpY3R1cmVJblBpY3R1cmVQYXJhbXMuQnVpbGRlcigpO1xuIgogICAgICAgICIgICAgICAgICAgICBiLnNldEFzcGVjdFJhdGlvKG5ldyBhbmRyb2lkLnV0aWwuUmF0aW9uYWwoOSwgMTYpKTtcbiIKICAgICAgICAiICAgICAgICAgICAgZW50ZXJQaWN0dXJlSW5QaWN0dXJlTW9kZShiLmJ1aWxkKCkpO1xuIgogICAgICAgICIgICAgICAgIH1cbiIKICAgICAgICAiICAgIH1cbiIKICAgICAgICAiICAgIEBPdmVycmlkZVxuIgogICAgICAgICIgICAgcHVibGljIHZvaWQgb25QaWN0dXJlSW5QaWN0dXJlTW9kZUNoYW5nZWQoXG4iCiAgICAgICAgIiAgICAgICAgICAgIGJvb2xlYW4gcGlwLCBhbmRyb2lkLmNvbnRlbnQucmVzLkNvbmZpZ3VyYXRpb24gY2ZnKSB7XG4iCiAgICAgICAgIiAgICAgICAgc3VwZXIub25QaWN0dXJlSW5QaWN0dXJlTW9kZUNoYW5nZWQocGlwLCBjZmcpO1xuIgogICAgICAgICIgICAgICAgIGlmIChnZXRCcmlkZ2UoKSAhPSBudWxsICYmIGdldEJyaWRnZSgpLmdldFdlYlZpZXcoKSAhPSBudWxsKSB7XG4iCiAgICAgICAgIiAgICAgICAgICAgIGZpbmFsIFN0cmluZyBqcyA9XG4iCiAgICAgICAgJyAgICAgICAgICAgICAgICAiZG9jdW1lbnQuZGlzcGF0Y2hFdmVudChuZXcgQ3VzdG9tRXZlbnQoIiArXG4nCiAgICAgICAgJyAgICAgICAgICAgICAgICAiXCdwaXBtb2RlXCcse2RldGFpbDp7YWN0aXZlOiIgKyBwaXAgKyAifX0pKTtcIjtcbicKICAgICAgICAiICAgICAgICAgICAgZ2V0QnJpZGdlKCkuZ2V0V2ViVmlldygpLnBvc3QobmV3IFJ1bm5hYmxlKCkge1xuIgogICAgICAgICIgICAgICAgICAgICAgICAgcHVibGljIHZvaWQgcnVuKCkge1xuIgogICAgICAgICIgICAgICAgICAgICAgICAgICAgIGdldEJyaWRnZSgpLmdldFdlYlZpZXcoKS5ldmFsdWF0ZUphdmFzY3JpcHQoanMsIG51bGwpO1xuIgogICAgICAgICIgICAgICAgICAgICAgICAgfVxuIgogICAgICAgICIgICAgICAgICAgICB9KTtcbiIKICAgICAgICAiICAgICAgICB9XG4iCiAgICAgICAgIiAgICB9XG4iCiAgICAgICAgIn0iCiAgICApCiAgICBwYXRjaGVkID0gYy5yZXBsYWNlKAogICAgICAgICJwdWJsaWMgY2xhc3MgTWFpbkFjdGl2aXR5IGV4dGVuZHMgQnJpZGdlQWN0aXZpdHkge30iLAogICAgICAgIHBpcF9jbGFzcwogICAgKQogICAgb3BlbihwYXRoLCAidyIpLndyaXRlKHBhdGNoZWQpCiAgICBwcmludCgiTWFpbkFjdGl2aXR5IHBhdGNoZWQ6IGtlZXAtYWxpdmUgKyBQaVAiKQplbHNlOgogICAgcHJpbnQoIkFscmVhZHkgcGF0Y2hlZCIpCg==' | base64 -d | python3
+
+      - name: Add Bluetooth + screen + PiP permissions
         run: |
-          python3 - << 'PYEOF'
-          import textwrap
-          path = "android/app/src/main/java/com/obddashboard/app/MainActivity.java"
-          with open(path) as f:
-              c = f.read()
-          if "onUserLeaveHint" not in c:
-              pip_class = textwrap.dedent("""
-                  public class MainActivity extends BridgeActivity {
-                      @Override
-                      public void onPause() {
-                          super.onPause();
-                          if (getBridge() != null && getBridge().getWebView() != null) {
-                              getBridge().getWebView().onResume();
-                          }
-                      }
-                      @Override
-                      public void onUserLeaveHint() {
-                          super.onUserLeaveHint();
-                          if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                              android.app.PictureInPictureParams.Builder b =
-                                  new android.app.PictureInPictureParams.Builder();
-                              b.setAspectRatio(new android.util.Rational(9, 16));
-                              enterPictureInPictureMode(b.build());
-                          }
-                      }
-                      @Override
-                      public void onPictureInPictureModeChanged(
-                              boolean pip, android.content.res.Configuration cfg) {
-                          super.onPictureInPictureModeChanged(pip, cfg);
-                          if (getBridge() != null && getBridge().getWebView() != null) {
-                              final String js =
-                                  "document.dispatchEvent(new CustomEvent(" +
-                                  "'pipmode',{detail:{active:" + pip + "}}));";
-                              getBridge().getWebView().post(new Runnable() {
-                                  public void run() {
-                                      getBridge().getWebView().evaluateJavascript(js, null);
-                                  }
-                              });
-                          }
-                      }
-                  }""").lstrip()
-              patched = c.replace(
-                  "public class MainActivity extends BridgeActivity {}",
-                  pip_class
-              )
-              with open(path, "w") as f:
-                  f.write(patched)
-              print("MainActivity patched: keep-alive + PiP")
+          FILE="android/app/src/main/AndroidManifest.xml"
+          python3 - "$FILE" << 'PYEOF'
+          import sys, re
+          path = sys.argv[1]
+          c = open(path).read()
+          changed = False
+
+          perms = [
+              'android.permission.BLUETOOTH',
+              'android.permission.BLUETOOTH_ADMIN',
+              'android.permission.BLUETOOTH_CONNECT',
+              'android.permission.BLUETOOTH_SCAN',
+              'android.permission.ACCESS_FINE_LOCATION',
+              'android.permission.ACCESS_COARSE_LOCATION',
+              'android.permission.WAKE_LOCK',
+          ]
+          if 'BLUETOOTH_CONNECT' not in c:
+              lines = []
+              for p in perms:
+                  extra = ' android:maxSdkVersion="30"' if p in ('android.permission.BLUETOOTH','android.permission.BLUETOOTH_ADMIN') else ''
+                  lines.append('    <uses-permission android:name="' + p + '"' + extra + ' />')
+              block = '\n'.join(lines) + '\n    <application'
+              c = c.replace('    <application', block, 1)
+              changed = True
+              print("Bluetooth permissions added")
+
+          if 'keepScreenOn' not in c:
+              c = c.replace('android:exported="true">', 'android:exported="true"\n            android:keepScreenOn="true">', 1)
+              changed = True
+              print("keepScreenOn added")
+
+          if 'supportsPictureInPicture' not in c:
+              c = c.replace('android:keepScreenOn="true">', 'android:keepScreenOn="true"\n            android:supportsPictureInPicture="true">', 1)
+              changed = True
+              print("PiP added to AndroidManifest")
           else:
+              print("PiP already present")
+
+          if changed:
+              open(path, 'w').write(c)
+          PYEOF
+
+      - name: Update app name
+        run: |
+          FILE="android/app/src/main/res/values/strings.xml"
+          sed -i 's|<string name="app_name">.*</string>|<string name="app_name">Craft Car Dashboard</string>|' "$FILE"
+          echo "App name: $(grep app_name $FILE)"
+
+      - name: Build Debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OBD-Dashboard-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
