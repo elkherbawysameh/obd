@@ -65,7 +65,6 @@ jobs:
 
           sizes = {"mdpi": 48, "hdpi": 72, "xhdpi": 96, "xxhdpi": 144, "xxxhdpi": 192}
 
-          # If logo.png exists in repo root, use it directly (exact logo)
           use_logo = os.path.exists("logo.png")
           if use_logo:
               src = Image.open("logo.png").convert("RGBA")
@@ -79,9 +78,7 @@ jobs:
                       img = Image.new("RGBA", (sz, sz), (0, 0, 0, 255))
                       d = ImageDraw.Draw(img)
                       s = sz / 192
-                      # Blue gear: large, fills frame, bottom cropped (matches Craft Innovations logo)
                       draw_rect_gear(d, int(92*s), int(122*s), int(94*s), int(75*s), 8, int(44*s), "#1565C0", math.pi/8)
-                      # Green gear: upper-right overlapping
                       draw_rect_gear(d, int(130*s), int(68*s), int(64*s), int(50*s), 6, int(31*s), "#4CAF50", math.pi/6)
                   out = "android/app/src/main/res/mipmap-" + dpi
                   os.makedirs(out, exist_ok=True)
@@ -140,50 +137,3 @@ jobs:
                   f.write(patched)
               print("MainActivity patched: keep-alive + PiP")
           else:
-              print("Already patched")
-          PYEOF
-
-      - name: Add Bluetooth + screen + PiP permissions
-        run: |
-          FILE="android/app/src/main/AndroidManifest.xml"
-          if ! grep -q "BLUETOOTH_CONNECT" "$FILE"; then
-            sed -i 's|    <application|    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />\n    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.WAKE_LOCK" />\n    <application|' "$FILE"
-            echo "Bluetooth permissions added"
-          fi
-          if ! grep -q "keepScreenOn" "$FILE"; then
-            sed -i 's|android:exported="true">|android:exported="true"\n            android:keepScreenOn="true">|' "$FILE"
-            echo "keepScreenOn added"
-          fi
-          python3 - "$FILE" << 'PYEOF'
-          import sys
-          path = sys.argv[1]
-          c = open(path).read()
-          if 'supportsPictureInPicture' not in c:
-              c = c.replace(
-                  'android:keepScreenOn="true">',
-                  'android:keepScreenOn="true"\n            android:supportsPictureInPicture="true"\n            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation">'
-              )
-              open(path, 'w').write(c)
-              print("PiP support added to AndroidManifest")
-          else:
-              print("PiP already present")
-          PYEOF
-
-      - name: Update app name
-        run: |
-          FILE="android/app/src/main/res/values/strings.xml"
-          sed -i 's|<string name="app_name">.*</string>|<string name="app_name">Craft Car Dashboard</string>|' "$FILE"
-          echo "App name: $(grep app_name $FILE)"
-
-      - name: Build Debug APK
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: OBD-Dashboard-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 30
