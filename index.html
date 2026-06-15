@@ -33,8 +33,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--wh
     height:65px;
     object-fit:contain;
 }
-
-.sp-title{font-size:26px;font-weight:700;letter-spacing:4px;color:var(--cyan);text-shadow:var(--gc)}
+  .sp-title{font-size:26px;font-weight:700;letter-spacing:4px;color:var(--cyan);text-shadow:var(--gc)}
 .sp-sub{font-size:12px;color:var(--gray);letter-spacing:2px}
 .sp-btn{margin-top:20px;padding:13px 38px;background:linear-gradient(135deg,#0a3a6e,var(--blue));border:1px solid var(--cyan);border-radius:30px;color:var(--white);font-size:15px;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:var(--gc);transition:all .3s}
 .sp-btn:active{transform:scale(0.97)}
@@ -739,7 +738,7 @@ canvas{display:block}
 </div>
   <div class="sp-title">CRAFT CAR DASHBOARD</div>
   <div class="sp-sub">VEHICLE DIAGNOSTICS SYSTEM</div>
-  <button class="sp-btn" onclick="enterApp()">ENTER DASHBOARD</button>
+  <button class="sp-btn" id="sp-btn" onclick="enterApp()" ontouchend="if(!_appEntered)enterApp()">ENTER DASHBOARD</button>
   <div style="font-size:11px;color:var(--gray);margin-top:12px">powered by Craft Innovations</div>
   <div style="font-size:10px;color:var(--gray);margin-top:4px">© 2026 Craft Innovations Group. All rights reserved.</div>
 </div>
@@ -1615,7 +1614,11 @@ function toggleDoorManual(door){
 // ════════════════════════════════════════════════
 //  RENDER
 // ════════════════════════════════════════════════
+function el(id){return document.getElementById(id);}
+function set(id,prop,val){const e=el(id);if(e)e[prop]=val;}
+function css(id,prop,val){const e=el(id);if(e)e.style[prop]=val;}
 function render(){
+  if(!el('spd-cv'))return; // dashboard not mounted yet
   const mode=S.gaugeMode;
   const analog=mode==='analog'||mode==='split';
   const digital=mode==='digital'||mode==='split';
@@ -1625,19 +1628,19 @@ function render(){
 
   // Speed
   const sc=document.getElementById('spd-cv'),sv=document.getElementById('spd-v');
-  sc.style.display=analog?'block':'none'; sv.style.display=analog?'block':'none';
-  document.getElementById('spd-u').style.display=analog?'block':'none';
-  document.getElementById('spd-digi').style.display=digital?'flex':'none';
-  if(analog){drawGauge('spd-cv',spd,0,maxSpd,'#00d4ff','#1a6fff');sv.textContent=spd;document.getElementById('spd-u').textContent=spdUnit;}
-  if(digital){document.getElementById('spd-dn').textContent=spd;document.getElementById('spd-du').textContent=spdUnit;document.getElementById('spd-df').style.width=(spd/maxSpd*100)+'%';}
+  if(sc)sc.style.display=analog?'block':'none'; if(sv)sv.style.display=analog?'block':'none';
+  css('spd-u','display',analog?'block':'none');
+  css('spd-digi','display',digital?'flex':'none');
+  if(analog){drawGauge('spd-cv',spd,0,maxSpd,'#00d4ff','#1a6fff');if(sv)sv.textContent=spd;set('spd-u','textContent',spdUnit);}
+  if(digital){set('spd-dn','textContent',spd);set('spd-du','textContent',spdUnit);css('spd-df','width',(spd/maxSpd*100)+'%');}
 
   // RPM
-  const rc=document.getElementById('rpm-cv'),rv=document.getElementById('rpm-v');
-  rc.style.display=analog?'block':'none'; rv.style.display=analog?'block':'none';
-  document.querySelector('#rpm-wrap .gu').style.display=analog?'block':'none';
-  document.getElementById('rpm-digi').style.display=digital?'flex':'none';
-  if(analog){drawGauge('rpm-cv',S.rpm,0,8000,'#ff6b00','#ff2244');rv.textContent=(Math.round(S.rpm/100)/10).toFixed(1);}
-  if(digital){document.getElementById('rpm-dn').textContent=Math.round(S.rpm);document.getElementById('rpm-df').style.width=(S.rpm/8000*100)+'%';}
+  const rc=el('rpm-cv'),rv=el('rpm-v');
+  if(rc)rc.style.display=analog?'block':'none'; if(rv)rv.style.display=analog?'block':'none';
+  const rgu=document.querySelector('#rpm-wrap .gu');if(rgu)rgu.style.display=analog?'block':'none';
+  css('rpm-digi','display',digital?'flex':'none');
+  if(analog){drawGauge('rpm-cv',S.rpm,0,8000,'#ff6b00','#ff2244');if(rv)rv.textContent=(Math.round(S.rpm/100)/10).toFixed(1);}
+  if(digital){set('rpm-dn','textContent',Math.round(S.rpm));css('rpm-df','width',(S.rpm/8000*100)+'%');}
 
   // Minis
   setMini('thr-v','thr-b',S.throttle>0?Math.round(S.throttle)+'%':'--','var(--green)',S.throttle,0,100);
@@ -2652,11 +2655,18 @@ async function connectOBD_Classic(){
 // ════════════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════════════
+var _appEntered=false;
 function enterApp(){
-  document.getElementById('splash').classList.remove('active');
-  document.getElementById('dashboard').classList.add('active');
-  // topbar map/sc buttons are always visible
-  loadVehicles();loadSettings();loadCarBtns();loadMaint();loadMechanics();
+  if(_appEntered)return; _appEntered=true;
+  try{
+    document.getElementById('splash').classList.remove('active');
+    document.getElementById('dashboard').classList.add('active');
+  }catch(e){console.error('enterApp-show:',e);}
+  try{loadVehicles();}catch(e){console.warn('loadVehicles:',e);}
+  try{loadSettings();}catch(e){console.warn('loadSettings:',e);}
+  try{loadCarBtns();}catch(e){console.warn('loadCarBtns:',e);}
+  try{loadMaint();}catch(e){console.warn('loadMaint:',e);}
+  try{loadMechanics();}catch(e){console.warn('loadMechanics:',e);}
   setInterval(tickClock,1000);tickClock();
 
   // Keep screen on while app is active
@@ -2890,3 +2900,98 @@ function finishScan(){
   btn.disabled=false;
   scanInProgress=false;
   if(activeDTCs.length===0){
+    status.textContent='✅ No fault codes found';
+    status.style.color='var(--green)';
+    flist.innerHTML='<div class="no-faults"><div class="no-faults-icon">✅</div><div class="empty-text">All Clear</div><div class="empty-sub">No fault codes detected in ECU</div></div>';
+  }else{
+    status.textContent=`⚠️ ${activeDTCs.length} fault code${activeDTCs.length>1?'s':''} found`;
+    status.style.color='var(--red)';
+    const sevCols=['','#00d4ff','#ffaa00','#ff6b00','#ff2244'];
+    const sevLbls=['','INFO','WARNING','SERIOUS','CRITICAL'];
+    flist.innerHTML=activeDTCs.map(d=>{
+      const info=DTC_DB[d.code]||{name:'Unknown Code',sys:'Unknown',sev:2,fix:'No information available.',spec:'Mechanic'};
+      const c=sevCols[info.sev]||'#ffaa00';
+      const lbl=sevLbls[info.sev]||'WARNING';
+        return `<div style="background:linear-gradient(135deg,#0a1628,#0d1f3c);border:1px solid ${c}44;border-radius:10px;padding:12px 14px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-family:monospace;font-size:15px;font-weight:700;color:${c};letter-spacing:2px">${d.code}</span>
+          <span style="font-size:10px;font-weight:700;color:${c};background:${c}22;padding:2px 8px;border-radius:10px">${lbl}${d.pending?' · PENDING':''}</span>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:4px">${info.name}</div>
+        <div style="font-size:11px;color:var(--cyan);margin-bottom:6px">System: ${info.sys}</div>
+        <div style="font-size:11px;color:var(--gray);line-height:1.5">${info.fix}</div>
+        <div style="font-size:11px;color:var(--yellow);margin-top:6px">👨‍🔧 ${info.spec}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function parseDTCResponse(raw){
+  const lines=raw.split(/[\r\n]+/).filter(l=>l.trim()&&!l.includes('>'));
+  for(const line of lines){
+    const hex=line.replace(/[\s:]/g,'');
+    if(!hex.match(/^[0-9A-Fa-f]+$/))continue;
+    let offset=0;
+    const u=hex.toUpperCase();
+    if(u.startsWith('43'))offset=2;else continue;
+    for(let i=offset;i<hex.length-3;i+=4){
+      const b1=parseInt(hex.substr(i,2),16);
+      const b2=parseInt(hex.substr(i+2,2),16);
+      if(b1===0&&b2===0)continue;
+      const types=['P','C','B','U'];
+      const code=`${types[(b1>>6)&3]}${(b1>>4)&3}${(b1&0xf).toString(16).toUpperCase()}${((b2>>4)&0xf).toString(16).toUpperCase()}${(b2&0xf).toString(16).toUpperCase()}`;
+      activeDTCs.push({code,pending:false});
+    }
+  }
+}
+
+function clearDTCs(){
+  if(!S.connected&&!S.demo){showToast('❌ Not Connected','Connect OBD device first');return;}
+  if(S.connected)sendOBD('04\r');
+  activeDTCs=[];
+  const flist=document.getElementById('fault-list');
+  const status=document.getElementById('fault-status');
+  flist.innerHTML='<div class="no-faults"><div class="no-faults-icon">🗑️</div><div class="empty-text">Codes Cleared</div><div class="empty-sub">Fault codes removed from ECU</div></div>';
+  status.textContent='✅ Fault codes cleared';
+  status.style.color='var(--green)';
+  showToast('✅ Cleared','Fault codes cleared from ECU');
+}
+</script>
+
+<div id="bt-picker" onclick="if(event.target===this)closeBTPicker(null)">
+  <div class="bt-sheet">
+    <div class="bt-sheet-title">📡 SELECT BLUETOOTH DEVICE</div>
+    <div id="bt-device-list"></div>
+    <button class="bt-cancel" onclick="closeBTPicker(null)">✕ CANCEL</button>
+  </div>
+</div>
+
+<div id="pip-overlay">
+  <div style="text-align:center;margin-bottom:6px">
+    <div style="font-size:9px;color:#4a6080;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px">ENGINE COOLANT</div>
+    <div id="pip-ct" style="font-size:64px;font-weight:900;color:var(--cyan);text-shadow:0 0 28px #00d4ff66;line-height:1;font-variant-numeric:tabular-nums">--°C</div>
+    <canvas id="pip-ct-cv" width="220" height="14" style="width:220px;height:14px;margin-top:6px;display:block;margin-left:auto;margin-right:auto"></canvas>
+  </div>
+  <div style="display:flex;gap:20px;justify-content:center;width:100%">
+    <div style="background:#0d1f3a;border:1px solid #1d3158;border-radius:12px;padding:12px 18px;text-align:center;flex:1">
+      <div style="font-size:9px;color:#4a6080;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">⚡ DYNAMO</div>
+      <div id="pip-dyn" style="font-size:26px;font-weight:800;color:var(--cyan);line-height:1">--V</div>
+      <div id="pip-dyn-pct" style="font-size:10px;color:#4a6080;margin-top:3px">--%</div>
+    </div>
+    <div style="background:#0d1f3a;border:1px solid #1d3158;border-radius:12px;padding:12px 18px;text-align:center;flex:1">
+      <div style="font-size:9px;color:#4a6080;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">💨 FAN</div>
+      <div id="pip-fan" style="font-size:26px;font-weight:800;color:var(--green);line-height:1">--%</div>
+      <canvas id="pip-fan-cv" width="60" height="6" style="width:60px;height:6px;margin-top:5px;border-radius:3px;display:block;margin-left:auto;margin-right:auto"></canvas>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+
+:5px;border-radius:3px;display:block;margin-left:auto;margin-right:auto"></canvas>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
