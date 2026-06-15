@@ -32,7 +32,8 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--wh
     width:65px;
     height:65px;
     object-fit:contain;
-}.sp-title{font-size:26px;font-weight:700;letter-spacing:4px;color:var(--cyan);text-shadow:var(--gc)}
+}
+  .sp-title{font-size:26px;font-weight:700;letter-spacing:4px;color:var(--cyan);text-shadow:var(--gc)}
 .sp-sub{font-size:12px;color:var(--gray);letter-spacing:2px}
 .sp-btn{margin-top:20px;padding:13px 38px;background:linear-gradient(135deg,#0a3a6e,var(--blue));border:1px solid var(--cyan);border-radius:30px;color:var(--white);font-size:15px;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:var(--gc);transition:all .3s}
 .sp-btn:active{transform:scale(0.97)}
@@ -447,27 +448,96 @@ canvas{display:block}
 }
 
 /* ── Landscape phones (max-height 500px) ── */
+/* ── Landscape phones — CAR DASHBOARD layout ── */
 @media (orientation:landscape) and (max-height:500px){
-  .topbar{padding:2px 8px}
-  .wi{width:20px;height:20px;font-size:11px}
-  .tc-time{font-size:12px}
+  /* Lock to viewport */
+  body,.screen{overflow:hidden}
+  #dashboard{height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+
+  /* ── Topbar: ultra compact ── */
+  .topbar{padding:1px 6px;flex-shrink:0}
+  .wi{width:16px;height:16px;font-size:9px}
+  .tc-time{font-size:10px;letter-spacing:0}
   .tc-date{display:none}
-  .mode-row{padding:1px 6px;gap:2px}
-  .mode-btn{padding:2px;font-size:9px}
-  .main-grid{gap:3px;padding:3px}
-  .center-panel{grid-template-columns:55px 1fr 55px;gap:3px}
-  .mini{padding:3px}
-  .mini-lbl{font-size:6px}
-  .mini-val{font-size:12px}
-  .clock-time{font-size:18px;letter-spacing:0}
-  .gear-badge{font-size:13px}
-  .stats-grid{gap:2px;padding:3px}
-  .stat{padding:3px 2px}
-  .stat-icon{font-size:11px;margin-bottom:0}
-  .stat-val{font-size:11px}
-  .stat-lbl{font-size:5px}
-  .gv{font-size:17px}
-  .bottom-row{gap:3px}
+  .top-action-btn{width:22px;height:22px;font-size:13px}
+  .set-btn{width:22px;height:22px;font-size:12px}
+  .obd-btn{font-size:8px;padding:2px 5px}
+
+  /* ── Mode row: one line ── */
+  .mode-row{padding:1px 3px;gap:1px;flex-shrink:0}
+  .mode-btn{padding:2px 3px;font-size:7px}
+
+  /* ══════════════════════════════════════════
+     MAIN GRID → 3-column car dashboard
+     [ SPEED ] [ CENTER INFO ] [ RPM ]
+     [    thin stats strip bottom    ]
+     ══════════════════════════════════════════ */
+  .main-grid{
+    flex:1;
+    display:grid;
+    grid-template-columns:1fr 108px 1fr;
+    grid-template-rows:1fr 26px;
+    gap:3px;padding:3px;
+    overflow:hidden
+  }
+
+  /* Gauges: left & right columns */
+  #spd-wrap{grid-column:1;grid-row:1}
+  #rpm-wrap{grid-column:3;grid-row:1}
+  #spd-cv,#rpm-cv{height:100%;width:auto;max-width:100%;aspect-ratio:auto}
+  .gw{border-radius:8px;padding:2px 3px;overflow:hidden}
+  .gl{font-size:7px;letter-spacing:1px;margin-top:0}
+  .gv{font-size:22px;line-height:1}
+  .gu{font-size:7px}
+
+  /* ── Centre column: gear / clock / coolant ── */
+  .center-panel{
+    grid-column:2;grid-row:1;
+    display:flex !important;
+    flex-direction:column;
+    align-items:center;
+    justify-content:space-evenly;
+    gap:0;padding:2px
+  }
+  /* Hide side mini columns */
+  .center-panel>.side-col{display:none}
+  .big-clock{padding:2px 3px;width:100%;box-sizing:border-box}
+  .clock-time{font-size:13px;letter-spacing:0;line-height:1}
+  .clock-sub{gap:3px;margin-top:2px}
+  .gear-badge{font-size:20px;padding:0 5px;line-height:1.1}
+  .drive-mode{font-size:6px;letter-spacing:0}
+  /* Coolant temp text in center */
+  #ct-val{font-size:16px !important;text-align:center;margin:0 !important}
+
+  /* ── Stats strip: bottom row, 4 cols ── */
+  .stats-grid{
+    grid-column:1/-1;grid-row:2;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:2px;padding:0;overflow:hidden
+  }
+  .stat{
+    padding:1px 4px;
+    flex-direction:row;
+    align-items:center;
+    gap:3px;
+    min-height:0;
+    border-radius:5px;
+    overflow:hidden
+  }
+  .stat-icon{font-size:9px;margin:0;flex-shrink:0}
+  .stat-val{font-size:9px;line-height:1}
+  .stat-lbl{font-size:5px;line-height:1;white-space:nowrap}
+  .stat-reset{display:none}
+
+  /* Hide coolant canvas & span-4 blocks (coolant arc + doors) in landscape */
+  #ct-cv{display:none !important}
+  .stats-grid>.stat:nth-last-child(-n+2){display:none}
+
+  /* Hide bottom bar cards */
+  .bottom-row{display:none}
+
+  /* Nav bar */
   .nav-btn{padding:4px 2px;font-size:7px;gap:1px}
   .nav-btn span{font-size:14px}
 }
@@ -611,12 +681,22 @@ canvas{display:block}
 
 
 /* ═══ PiP OVERLAY ═══ */
-#pip-overlay{display:none;position:fixed;inset:0;z-index:9999;background:#050a18;flex-direction:column;align-items:center;justify-content:space-around;padding:16px 20px}
+#pip-overlay{display:none;position:fixed;inset:0;z-index:9999;background:#050a18;flex-direction:column;align-items:center;justify-content:space-around;padding:3vw 4vw}
 .pip-big{font-size:72px;font-weight:900;color:var(--cyan);text-shadow:0 0 24px #00d4ff55;line-height:1;text-align:center;font-variant-numeric:tabular-nums}
 .pip-unit{font-size:12px;color:var(--gray);letter-spacing:3px;text-align:center}
 .pip-row{display:flex;gap:28px;justify-content:center}
 .pip-stat{text-align:center}
 .pip-num{font-size:26px;font-weight:700;line-height:1}
+/* PiP child element scaling — uses vw so it auto-fits the small PiP window */
+#pip-ct{font-size:clamp(28px,16vw,64px) !important;line-height:1 !important}
+#pip-dyn,#pip-fan{font-size:clamp(14px,7.5vw,26px) !important;line-height:1 !important}
+#pip-dyn-pct{font-size:clamp(8px,3vw,10px) !important}
+#pip-ct-cv{width:min(220px,55vw) !important;height:clamp(8px,3.5vw,14px) !important}
+#pip-fan-cv{width:min(60px,16vw) !important}
+#pip-overlay>div:first-child>div:first-child{font-size:clamp(7px,2.5vw,9px) !important;letter-spacing:min(3px,1vw) !important}
+#pip-overlay>div:last-child>div{padding:clamp(6px,2.5vw,12px) clamp(8px,3.5vw,18px) !important;border-radius:clamp(6px,2vw,12px) !important}
+#pip-overlay>div:last-child>div>div:first-child{font-size:clamp(6px,2.2vw,9px) !important}
+#pip-overlay>div:last-child{gap:clamp(8px,4vw,20px) !important}
 .pip-lbl{font-size:9px;color:var(--gray);letter-spacing:1px;margin-top:3px;text-transform:uppercase}
 
 /* ═══ CAR QUICK-LAUNCH PANEL ═══ */
@@ -653,7 +733,6 @@ canvas{display:block}
 
 <!-- ═══ SPLASH ═══ -->
 <div id="splash" class="screen active">
-
  <div class="sp-logo">
     <img src="logo.png" alt="Craft Innovations Logo">
 </div>
@@ -2810,82 +2889,3 @@ function finishScan(){
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <span style="font-family:monospace;font-size:15px;font-weight:700;color:${c};letter-spacing:2px">${d.code}</span>
           <span style="font-size:10px;font-weight:700;color:${c};background:${c}22;padding:2px 8px;border-radius:10px">${lbl}${d.pending?' · PENDING':''}</span>
-        </div>
-        <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:4px">${info.name}</div>
-        <div style="font-size:11px;color:var(--cyan);margin-bottom:6px">System: ${info.sys}</div>
-        <div style="font-size:11px;color:var(--gray);line-height:1.5">${info.fix}</div>
-        <div style="font-size:11px;color:var(--yellow);margin-top:6px">👨‍🔧 ${info.spec}</div>
-      </div>`;
-    }).join('');
-  }
-}
-
-function parseDTCResponse(raw){
-  const lines=raw.split(/[\r\n]+/).filter(l=>l.trim()&&!l.includes('>'));
-  for(const line of lines){
-    const hex=line.replace(/[\s:]/g,'');
-    if(!hex.match(/^[0-9A-Fa-f]+$/))continue;
-    let offset=0;
-    const u=hex.toUpperCase();
-    if(u.startsWith('43'))offset=2;else continue;
-    for(let i=offset;i<hex.length-3;i+=4){
-      const b1=parseInt(hex.substr(i,2),16);
-      const b2=parseInt(hex.substr(i+2,2),16);
-      if(b1===0&&b2===0)continue;
-      const types=['P','C','B','U'];
-      const code=`${types[(b1>>6)&3]}${(b1>>4)&3}${(b1&0xf).toString(16).toUpperCase()}${((b2>>4)&0xf).toString(16).toUpperCase()}${(b2&0xf).toString(16).toUpperCase()}`;
-      activeDTCs.push({code,pending:false});
-    }
-  }
-}
-
-function clearDTCs(){
-  if(!S.connected&&!S.demo){showToast('❌ Not Connected','Connect OBD device first');return;}
-  if(S.connected)sendOBD('04\r');
-  activeDTCs=[];
-  const flist=document.getElementById('fault-list');
-  const status=document.getElementById('fault-status');
-  flist.innerHTML='<div class="no-faults"><div class="no-faults-icon">🗑️</div><div class="empty-text">Codes Cleared</div><div class="empty-sub">Fault codes removed from ECU</div></div>';
-  status.textContent='✅ Fault codes cleared';
-  status.style.color='var(--green)';
-  showToast('✅ Cleared','Fault codes cleared from ECU');
-}
-</script>
-
-<div id="bt-picker" onclick="if(event.target===this)closeBTPicker(null)">
-  <div class="bt-sheet">
-    <div class="bt-sheet-title">📡 SELECT BLUETOOTH DEVICE</div>
-    <div id="bt-device-list"></div>
-    <button class="bt-cancel" onclick="closeBTPicker(null)">✕ CANCEL</button>
-  </div>
-</div>
-
-<div id="pip-overlay">
-  <div style="text-align:center;margin-bottom:6px">
-    <div style="font-size:9px;color:#4a6080;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px">ENGINE COOLANT</div>
-    <div id="pip-ct" style="font-size:64px;font-weight:900;color:var(--cyan);text-shadow:0 0 28px #00d4ff66;line-height:1;font-variant-numeric:tabular-nums">--°C</div>
-    <canvas id="pip-ct-cv" width="220" height="14" style="width:220px;height:14px;margin-top:6px;display:block;margin-left:auto;margin-right:auto"></canvas>
-  </div>
-  <div style="display:flex;gap:20px;justify-content:center;width:100%">
-    <div style="background:#0d1f3a;border:1px solid #1d3158;border-radius:12px;padding:12px 18px;text-align:center;flex:1">
-      <div style="font-size:9px;color:#4a6080;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">⚡ DYNAMO</div>
-      <div id="pip-dyn" style="font-size:26px;font-weight:800;color:var(--cyan);line-height:1">--V</div>
-      <div id="pip-dyn-pct" style="font-size:10px;color:#4a6080;margin-top:3px">--%</div>
-    </div>
-    <div style="background:#0d1f3a;border:1px solid #1d3158;border-radius:12px;padding:12px 18px;text-align:center;flex:1">
-      <div style="font-size:9px;color:#4a6080;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">💨 FAN</div>
-      <div id="pip-fan" style="font-size:26px;font-weight:800;color:var(--green);line-height:1">--%</div>
-      <canvas id="pip-fan-cv" width="60" height="6" style="width:60px;height:6px;margin-top:5px;border-radius:3px;display:block;margin-left:auto;margin-right:auto"></canvas>
-    </div>
-  </div>
-</div>
-
-</body>
-</html>
-:5px;border-radius:3px;display:block;margin-left:auto;margin-right:auto"></canvas>
-    </div>
-  </div>
-</div>
-
-</body>
-</html>
