@@ -732,7 +732,10 @@ canvas{display:block}
   <div class="sp-logo"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="black"/><path d="M 77.382,63.546 L 86.050,66.092 L 79.870,81.012 L 71.941,76.683 L 62.683,85.941 L 67.012,93.870 L 52.092,100.050 L 49.546,91.382 L 36.454,91.382 L 33.908,100.050 L 18.988,93.870 L 23.317,85.941 L 14.059,76.683 L 6.130,81.012 L -0.050,66.092 L 8.618,63.546 L 8.618,50.454 L -0.050,47.908 L 6.130,32.988 L 14.059,37.317 L 23.317,28.059 L 18.988,20.130 L 33.908,13.950 L 36.454,22.618 L 49.546,22.618 L 52.092,13.950 L 67.012,20.130 L 62.683,28.059 L 71.941,37.317 L 79.870,32.988 L 86.050,47.908 L 77.382,50.454 Z" fill="#1565C0"/><circle cx="43" cy="57" r="21" fill="black"/><path d="M 91.110,41.876 L 97.699,44.315 L 89.416,58.661 L 84.010,54.174 L 72.100,61.050 L 73.283,67.976 L 56.717,67.976 L 57.900,61.050 L 45.990,54.174 L 40.584,58.661 L 32.301,44.315 L 38.890,41.876 L 38.890,28.124 L 32.301,25.685 L 40.584,11.339 L 45.990,15.826 L 57.900,8.950 L 56.717,2.024 L 73.283,2.024 L 72.100,8.950 L 84.010,15.826 L 89.416,11.339 L 97.699,25.685 L 91.110,28.124 Z" fill="#4CAF50"/><circle cx="65" cy="35" r="15" fill="black"/></svg></div>
   <div class="sp-title">CRAFT CAR DASHBOARD</div>
   <div class="sp-sub">VEHICLE DIAGNOSTICS SYSTEM</div>
-  <button class="sp-btn" id="sp-btn" onclick="enterApp()" ontouchend="if(!_appEntered)enterApp()">ENTER DASHBOARD</button>
+  <button class="sp-btn" id="sp-btn"
+    ontouchstart="this.style.opacity='.7'"
+    ontouchend="this.style.opacity='1';if(!_appEntered)enterApp()"
+    onclick="enterApp()">ENTER DASHBOARD</button>
   <div style="font-size:11px;color:var(--gray);margin-top:12px">powered by Craft Innovations</div>
   <div style="font-size:10px;color:var(--gray);margin-top:4px">© 2026 Craft Innovations Group. All rights reserved.</div>
 </div>
@@ -2652,9 +2655,15 @@ async function connectOBD_Classic(){
 var _appEntered=false;
 function enterApp(){
   if(_appEntered)return; _appEntered=true;
+  // Force display change with inline styles — works on any WebView
   try{
-    document.getElementById('splash').classList.remove('active');
-    document.getElementById('dashboard').classList.add('active');
+    var sp=document.getElementById('splash');
+    var db=document.getElementById('dashboard');
+    if(sp){sp.style.display='none';sp.classList.remove('active');}
+    if(db){
+      db.style.cssText='display:flex!important;flex-direction:column;width:100%;height:100%;overflow:hidden';
+      db.classList.add('active');
+    }
   }catch(e){console.error('enterApp-show:',e);}
   try{loadVehicles();}catch(e){console.warn('loadVehicles:',e);}
   try{loadSettings();}catch(e){console.warn('loadSettings:',e);}
@@ -2973,7 +2982,7 @@ function clearDTCs(){
       <div id="pip-dyn-pct" style="font-size:10px;color:#4a6080;margin-top:3px">--%</div>
     </div>
     <div style="background:#0d1f3a;border:1px solid #1d3158;border-radius:12px;padding:12px 18px;text-align:center;flex:1">
-      <div style="font-size:9px;color:#4a6080;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">💨 FAN</div>
+      <div style="font-size:9px;color:#4a6080;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">�💨 FAN</div>
       <div id="pip-fan" style="font-size:26px;font-weight:800;color:var(--green);line-height:1">--%</div>
       <canvas id="pip-fan-cv" width="60" height="6" style="width:60px;height:6px;margin-top:5px;border-radius:3px;display:block;margin-left:auto;margin-right:auto"></canvas>
     </div>
@@ -2981,8 +2990,7 @@ function clearDTCs(){
 </div>
 </body>
 </html>
-
-:5px;border-radius:3px;display:block;margin-left:auto;margin-right:auto"></canvas>
+5px;border-radius:3px;display:block;margin-left:auto;margin-right:auto"></canvas>
     </div>
   </div>
 </div>
