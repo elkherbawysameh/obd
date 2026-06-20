@@ -2653,85 +2653,38 @@ async function connectOBD_Classic(){
 //  INIT
 // ════════════════════════════════════════════════
 var _appEntered=false;
+
 function enterApp(){
-  if(_appEntered)return; _appEntered=true;
-  // Force display change with inline styles — works on any WebView
+
+  if(_appEntered) return;
+  _appEntered=true;
+
   try{
     var sp=document.getElementById('splash');
     var db=document.getElementById('dashboard');
-    if(sp){sp.style.display='none';sp.classList.remove('active');}
+
+    if(sp){
+      sp.style.display='none';
+      sp.classList.remove('active');
+    }
+
     if(db){
-      db.style.cssText='display:flex!important;flex-direction:column;width:100%;height:100%;overflow:hidden';
+      db.style.display='flex';
       db.classList.add('active');
     }
-  }catch(e){console.error('enterApp-show:',e);}
-  try{loadVehicles();}catch(e){console.warn('loadVehicles:',e);}
-  try{loadSettings();}catch(e){console.warn('loadSettings:',e);}
-  try{loadCarBtns();}catch(e){console.warn('loadCarBtns:',e);}
-  try{loadMaint();}catch(e){console.warn('loadMaint:',e);}
-  try{loadMechanics();}catch(e){console.warn('loadMechanics:',e);}
-  setInterval(tickClock,1000);tickClock();
 
-  // Keep screen on while app is active
-  let _wakeLock=null;
-  async function acquireWakeLock(){
-    try{
-      if('wakeLock' in navigator){
-        _wakeLock=await navigator.wakeLock.request('screen');
-        _wakeLock.addEventListener('release',()=>{_wakeLock=null;});
-      }
-    }catch(e){console.warn('WakeLock:',e.message);}
+    console.log("Dashboard opened");
+
+  }catch(e){
+    console.error(e);
   }
-  acquireWakeLock();
 
-  // ── Auto-connect to last saved OBD device ──
-  setTimeout(async()=>{
-    const lastAddr=localStorage.getItem('obd_last_addr');
-    const lastName=localStorage.getItem('obd_last_name')||'ELM327';
-    if(lastAddr&&getCapBT()&&!S.connected&&!S.demo){
-      showToast('🔄 Auto-connecting...',lastName);
-      await _autoConnect(lastAddr,lastName);
-    }
-  },2000);
+  try{
+    render();
+  }catch(e){
+    console.error("render:",e);
+  }
 
-  // ── PiP mode handler (Android MainActivity dispatches 'pipmode') ──
-  document.addEventListener('pipmode',(e)=>{
-    const isActive=!!(e.detail&&e.detail.active);
-    const pipOv=document.getElementById('pip-overlay');
-    const dash=document.getElementById('dashboard');
-    if(pipOv)pipOv.style.display=isActive?'flex':'none';
-    // Show/hide main dashboard content
-    if(dash){
-      const inner=(dash.querySelector('.topbar')&&dash.querySelector('.topbar').parentElement)||dash;
-      Array.from(dash.children).forEach(c=>{
-        if(c.id!=='pip-overlay')c.style.display=isActive?'none':'';
-      });
-    }
-  });
-
-  document.addEventListener('visibilitychange',async()=>{
-    if(document.visibilityState==='visible'){
-      acquireWakeLock();
-      if(S.connected&&(btChar||_btClassic)){
-        // Check if connection is stale (no data for >6 sec)
-        if(_btClassic&&(Date.now()-_lastDataTime)>6000){
-          await _doReconnect();
-        } else {
-          if(!obdPoll)startPoll();
-          if(!_odoTimer)startOdoTimer();
-          if(!_watchdog)startWatchdog();
-        }
-      } else if(!S.connected&&_btClassicAddress){
-        // Auto-reconnect after call/app switch
-        await _doReconnect();
-      }
-    } else {
-      if(_wakeLock){try{await _wakeLock.release();}catch{}_wakeLock=null;}
-    }
-  });
-  render();
-  setTimeout(()=>{drawGauge('spd-cv',0,0,220,'#00d4ff','#1a6fff');drawGauge('rpm-cv',0,0,8000,'#ff6b00','#ff2244');drawCoolantGauge('ct-cv',40);},150);
-  S.tripStartTime=Date.now();
 }
 
 // Auto-enter after 2s — car screens that can't tap the button enter automatically
