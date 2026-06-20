@@ -28,11 +28,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--wh
 /* SPLASH */
 #splash{background:radial-gradient(ellipse at center,#0d1f4a,#050a18);align-items:center;justify-content:center;gap:16px}
 .sp-logo{width:110px;height:110px;border:3px solid var(--cyan);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:var(--gc);animation:pulse 2s ease-in-out infinite}
-.sp-logo img{
-    width:65px;
-    height:65px;
-    object-fit:contain;
-}
+.sp-logo svg{width:65px;height:65px;fill:var(--cyan)}
 .sp-title{font-size:26px;font-weight:700;letter-spacing:4px;color:var(--cyan);text-shadow:var(--gc)}
 .sp-sub{font-size:12px;color:var(--gray);letter-spacing:2px}
 .sp-btn{margin-top:20px;padding:13px 38px;background:linear-gradient(135deg,#0a3a6e,var(--blue));border:1px solid var(--cyan);border-radius:30px;color:var(--white);font-size:15px;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:var(--gc);transition:all .3s}
@@ -733,9 +729,7 @@ canvas{display:block}
 
 <!-- ═══ SPLASH ═══ -->
 <div id="splash" class="screen active">
- <div class="sp-logo">
-    <img src="logo.png" alt="Craft Innovations Logo">
-</div>
+  <div class="sp-logo"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="black"/><path d="M 77.382,63.546 L 86.050,66.092 L 79.870,81.012 L 71.941,76.683 L 62.683,85.941 L 67.012,93.870 L 52.092,100.050 L 49.546,91.382 L 36.454,91.382 L 33.908,100.050 L 18.988,93.870 L 23.317,85.941 L 14.059,76.683 L 6.130,81.012 L -0.050,66.092 L 8.618,63.546 L 8.618,50.454 L -0.050,47.908 L 6.130,32.988 L 14.059,37.317 L 23.317,28.059 L 18.988,20.130 L 33.908,13.950 L 36.454,22.618 L 49.546,22.618 L 52.092,13.950 L 67.012,20.130 L 62.683,28.059 L 71.941,37.317 L 79.870,32.988 L 86.050,47.908 L 77.382,50.454 Z" fill="#1565C0"/><circle cx="43" cy="57" r="21" fill="black"/><path d="M 91.110,41.876 L 97.699,44.315 L 89.416,58.661 L 84.010,54.174 L 72.100,61.050 L 73.283,67.976 L 56.717,67.976 L 57.900,61.050 L 45.990,54.174 L 40.584,58.661 L 32.301,44.315 L 38.890,41.876 L 38.890,28.124 L 32.301,25.685 L 40.584,11.339 L 45.990,15.826 L 57.900,8.950 L 56.717,2.024 L 73.283,2.024 L 72.100,8.950 L 84.010,15.826 L 89.416,11.339 L 97.699,25.685 L 91.110,28.124 Z" fill="#4CAF50"/><circle cx="65" cy="35" r="15" fill="black"/></svg></div>
   <div class="sp-title">CRAFT CAR DASHBOARD</div>
   <div class="sp-sub">VEHICLE DIAGNOSTICS SYSTEM</div>
   <button class="sp-btn" id="sp-btn"
@@ -1304,7 +1298,7 @@ const S = {
 // ════════════════════════════════════════════════
 // Detect Capacitor environment
 function getCapBT(){
-  return window.Capacitor?.Plugins?.BluetoothSerial || null;
+  return (window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.BluetoothSerial)||null;
 }
 // All known ELM327 / OBD adapter service & characteristic UUIDs
 const OBD_SVCS=[
@@ -1479,7 +1473,7 @@ function onDisconnect(){S.connected=false;clearInterval(obdPoll);clearInterval(_
 async function disconnectOBD(){
   clearInterval(obdPoll);clearInterval(_watchdog);_watchdog=null;
   if(_btClassic){try{if(_btReadListener){_btReadListener.remove();_btReadListener=null;}await _btClassic.stopNotifications({address:_btClassicAddress});await _btClassic.disconnect({address:_btClassicAddress});}catch{}_btClassic=null;_btClassicAddress=null;}
-  if(btDevice?.gatt?.connected){try{await btDevice.gatt.disconnect();}catch{}}
+  if((btDevice&&btDevice.gatt&&btDevice.gatt.connected)){try{await btDevice.gatt.disconnect();}catch{}}
   S.connected=false;setOBDBtn('off');
 }
 function startWatchdog(){
@@ -1560,7 +1554,7 @@ function toggleOBD(){
 function setOBDBtn(s){
   const b=document.getElementById('obd-btn'),sig=document.getElementById('sig-v'),siu=document.getElementById('sig-u');
   if(s==='connecting'){b.className='obd-btn';b.innerHTML='<span class="scan-ring"></span>CONNECTING...';sig.textContent='SCANNING';sig.style.color='var(--yellow)';siu.textContent='';}
-  else if(s==='live'){b.className='obd-btn live';b.textContent='✅ OBD LIVE';sig.textContent='● LIVE';sig.style.color='var(--green)';siu.textContent=btDevice?.name||(_btClassic?'ELM327 (Classic)':'ELM327');}
+  else if(s==='live'){b.className='obd-btn live';b.textContent='✅ OBD LIVE';sig.textContent='● LIVE';sig.style.color='var(--green)';siu.textContent=(btDevice&&btDevice.name)||(_btClassic?'ELM327 (Classic)':'ELM327');}
   else{b.className='obd-btn off';b.textContent='⚡ CONNECT';sig.textContent='NO OBD';sig.style.color='var(--gray)';siu.textContent='--';}
 }
 
@@ -2011,17 +2005,17 @@ function editCarBtn(slot){
   const eI=document.getElementById('cb-icon');
   const eN=document.getElementById('cb-name');
   const eU=document.getElementById('cb-url');
-  if(eI)eI.value=b?.icon||'';
-  if(eN)eN.value=b?.name||'';
-  if(eU)eU.value=b?.url||'';
+  if(eI)eI.value=(b&&b.icon)||'';
+  if(eN)eN.value=(b&&b.name)||'';
+  if(eU)eU.value=(b&&b.url)||'';
   const m=document.getElementById('cb-modal');if(m)m.style.display='flex';
 }
 function saveCarBtn(){
   if(_editCarSlot<2)return;
   const ci=_editCarSlot-2;
-  const icon=(document.getElementById('cb-icon')?.value.trim()||'📱').slice(0,4);
-  const name=(document.getElementById('cb-name')?.value.trim()||'APP').toUpperCase().slice(0,10);
-  const url=document.getElementById('cb-url')?.value.trim()||'#';
+  const icon=((document.getElementById('cb-icon')?document.getElementById('cb-icon').value.trim():'')||'📱').slice(0,4);
+  const name=((document.getElementById('cb-name')?document.getElementById('cb-name').value.trim():'')||'APP').toUpperCase().slice(0,10);
+  const url=(document.getElementById('cb-url')?document.getElementById('cb-url').value.trim():'')||'#';
   carCustom[ci]={icon,name,url};
   saveCarBtns();renderCarBtns();closeCarBtnModal();
 }
@@ -2344,11 +2338,11 @@ function loadVehicles(){
     const existCfg=JSON.parse(localStorage.getItem('obd_cfg')||'null');
     vehicles=[{
       id:defId, name:'My Car', make:'', model:'', year:'', icon:'🚗',
-      odometer:existCfg?.odometer||0, tankSize:existCfg?.tankSize||50,
-      unit:existCfg?.unit||'kmh', alertSound:existCfg?.alertSound||'beep',
-      alerts:existCfg?.alerts||{speed:true,temp:true,fuel:true,door:true},
-      thresholds:existCfg?.thresholds||{speed:120,temp:105,fuel:15},
-      gaugeMode:existCfg?.gaugeMode||'analog'
+      odometer:(existCfg&&existCfg.odometer)||0, tankSize:(existCfg&&existCfg.tankSize)||50,
+      unit:(existCfg&&existCfg.unit)||'kmh', alertSound:(existCfg&&existCfg.alertSound)||'beep',
+      alerts:(existCfg&&existCfg.alerts)||{speed:true,temp:true,fuel:true,door:true},
+      thresholds:(existCfg&&existCfg.thresholds)||{speed:120,temp:105,fuel:15},
+      gaugeMode:(existCfg&&existCfg.gaugeMode)||'analog'
     }];
     // Migrate maintenance and mechanics
     const oldMaint=localStorage.getItem('obd_maint');
@@ -2450,7 +2444,7 @@ function selectVehIcon(el,icon){
 function openVehicleModal(id){
   _selVehIcon='🚗';
   document.querySelectorAll('.icon-opt').forEach(x=>x.classList.remove('sel'));
-  document.querySelector('.icon-opt')?.classList.add('sel');
+  var _iqo=document.querySelector('.icon-opt');if(_iqo)_iqo.classList.add('sel');
   if(id){
     const v=vehicles.find(x=>x.id===id);if(!v)return;
     document.getElementById('veh-modal-title').textContent='Edit Vehicle';
@@ -2708,7 +2702,7 @@ function enterApp(){
     if(pipOv)pipOv.style.display=isActive?'flex':'none';
     // Show/hide main dashboard content
     if(dash){
-      const inner=dash.querySelector('.topbar')?.parentElement||dash;
+      const inner=(dash.querySelector('.topbar')&&dash.querySelector('.topbar').parentElement)||dash;
       Array.from(dash.children).forEach(c=>{
         if(c.id!=='pip-overlay')c.style.display=isActive?'none':'';
       });
@@ -2997,12 +2991,5 @@ function clearDTCs(){
     </div>
   </div>
 </div>
-</body>
-</html>
-5px;border-radius:3px;display:block;margin-left:auto;margin-right:auto"></canvas>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
