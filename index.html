@@ -1335,7 +1335,7 @@ canvas{display:block}
 <!-- TOAST -->
 <div id="toast"><div class="toast-title" id="toast-title">⚠️ ALERT</div><div class="toast-msg" id="toast-msg"></div></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" async></script>
 <script>
 // ── Old Android touch fix: onclick on <div> doesn't fire without this ──
 (function(){
@@ -2034,6 +2034,7 @@ function showToast(title,msg){
 let map=null,gpsMarker=null,gpsTrail=[],gpsWatch=null,trailLine=null;
 function initMap(){
   if(map)return;
+  if(typeof L==='undefined'){setTimeout(initMap,500);return;}
   map=L.map('leaflet-map',{zoomControl:true,attributionControl:false}).setView([30.0444,31.2357],14);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(map);
   gpsMarker=L.circleMarker([30.0444,31.2357],{radius:10,color:'#00d4ff',weight:2,fillColor:'#1a6fff',fillOpacity:.9}).addTo(map);
