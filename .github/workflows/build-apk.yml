@@ -129,6 +129,13 @@ jobs:
           else:
               print("PiP already present")
 
+          if 'screenOrientation' not in c:
+              c = c.replace('android:supportsPictureInPicture="true">', 'android:supportsPictureInPicture="true"\n            android:screenOrientation="landscape">', 1)
+              changed = True
+              print("Landscape orientation locked in AndroidManifest")
+          else:
+              print("screenOrientation already set")
+
           if changed:
               open(path, 'w').write(c)
           PYEOF
