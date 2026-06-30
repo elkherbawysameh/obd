@@ -21,6 +21,7 @@
   --gg: 0 0 12px #00ff8888;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[onclick]:not(button):not(input):not(select){cursor:pointer;-webkit-user-select:none;user-select:none}
 body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--white);height:100vh;overflow:hidden;touch-action:manipulation}
 .screen{display:none;width:100%;height:100vh;flex-direction:column}
 .screen.active{display:flex}
@@ -443,99 +444,175 @@ canvas{display:block}
   .bottom-row{grid-template-columns:1fr}
 }
 
-/* ── Landscape phones (max-height 500px) ── */
-/* ── Landscape phones — CAR DASHBOARD layout ── */
-@media (orientation:landscape) and (max-height:500px){
-  /* Lock to viewport */
+/* ═══════════════════════════════════════════════════════════════════
+   LANDSCAPE CAR DASHBOARD — all landscape screens up to 900px tall
+   Layout:
+     [  SPEED  ] [ THROTTLE ] [  CLOCK/GEAR/COOLANT  ] [ DYNAMO ] [  RPM  ]
+     [          ] [  LOAD   ] [                       ] [  OIL  ] [       ]
+     [          ] [  FAN    ] [                       ] [ RUNTIME] [       ]
+     [   ⛽ FUEL BAR ████░░░      ] [  km/L · TRIP TIME · NEXT SVC   ]
+     [ 🏠 DASH ] [ 🔧 SERVICE ] [ 👨‍🔧 MECHS ] [ ⚠️ FAULTS ] [ 🚗 CARS ]
+   ═══════════════════════════════════════════════════════════════════ */
+@media (orientation:landscape) and (max-height:900px){
+  /* Lock to viewport — no scroll */
   body,.screen{overflow:hidden}
   #dashboard.active{height:100vh;height:100dvh;overflow:hidden;flex-direction:column}
 
-  /* ── Topbar: ultra compact ── */
-  .topbar{padding:1px 6px;flex-shrink:0}
-  .wi{width:16px;height:16px;font-size:9px}
-  .tc-time{font-size:10px;letter-spacing:0}
+  /* ── Topbar: compact, no date ── */
+  .topbar{padding:0 8px;height:28px;min-height:0;flex-shrink:0;overflow:hidden}
+  .wi{width:18px;height:18px;font-size:10px}
+  .tc-time{font-size:12px;letter-spacing:0}
   .tc-date{display:none}
-  .top-action-btn{width:22px;height:22px;font-size:13px}
-  .set-btn{width:22px;height:22px;font-size:12px}
-  .obd-btn{font-size:8px;padding:2px 5px}
+  .top-action-btn{width:24px;height:24px;font-size:14px}
+  .set-btn{width:24px;height:24px;font-size:13px}
+  .obd-btn{font-size:9px;padding:2px 7px}
 
-  /* ── Mode row: one line ── */
-  .mode-row{padding:1px 3px;gap:1px;flex-shrink:0}
-  .mode-btn{padding:2px 3px;font-size:7px}
+  /* ── Mode row: hidden — saves vertical space ── */
+  .mode-row{display:none}
 
-  /* ══════════════════════════════════════════
-     MAIN GRID → 3-column car dashboard
-     [ SPEED ] [ CENTER INFO ] [ RPM ]
-     [    thin stats strip bottom    ]
-     ══════════════════════════════════════════ */
+  /* ══ MAIN GRID: [SPEED] [center-panel 290px] [RPM] + [bottom bar 34px] ══ */
   .main-grid{
     flex:1;
     display:grid;
-    grid-template-columns:1fr 108px 1fr;
-    grid-template-rows:1fr 26px;
+    grid-template-columns:1fr 290px 1fr;
+    grid-template-rows:1fr 34px;
     gap:3px;padding:3px;
     overflow:hidden
   }
 
-  /* Gauges: left & right columns */
+  /* ── Gauges ── */
   #spd-wrap{grid-column:1;grid-row:1}
   #rpm-wrap{grid-column:3;grid-row:1}
   #spd-cv,#rpm-cv{height:100%;width:auto;max-width:100%;aspect-ratio:auto}
-  .gw{border-radius:8px;padding:2px 3px;overflow:hidden}
-  .gl{font-size:7px;letter-spacing:1px;margin-top:0}
-  .gv{font-size:22px;line-height:1}
-  .gu{font-size:7px}
+  .gw{border-radius:8px;padding:3px 5px;overflow:hidden}
+  .gl{font-size:8px;letter-spacing:1px;margin-top:0}
+  .gv{font-size:26px;line-height:1}
+  .gu{font-size:8px}
 
-  /* ── Centre column: gear / clock / coolant ── */
+  /* ── Centre panel: restore 3-column (left-minis | info | right-minis) ── */
   .center-panel{
     grid-column:2;grid-row:1;
-    display:flex !important;
-    flex-direction:column;
-    align-items:center;
-    justify-content:space-evenly;
-    gap:0;padding:2px
+    display:grid!important;
+    grid-template-columns:70px 1fr 70px;
+    gap:3px;padding:2px
   }
-  /* Hide side mini columns */
-  .center-panel>.side-col{display:none}
-  .big-clock{padding:2px 3px;width:100%;box-sizing:border-box}
-  .clock-time{font-size:13px;letter-spacing:0;line-height:1}
-  .clock-sub{gap:3px;margin-top:2px}
-  .gear-badge{font-size:20px;padding:0 5px;line-height:1.1}
-  .drive-mode{font-size:6px;letter-spacing:0}
-  /* Coolant temp text in center */
-  #ct-val{font-size:16px !important;text-align:center;margin:0 !important}
+  /* Show the side mini-columns */
+  .center-panel>.side-col{display:flex;flex-direction:column;gap:3px}
+  .mini{padding:4px 5px;border-radius:6px;gap:0}
+  .mini-lbl{font-size:6px;letter-spacing:.5px;margin-bottom:2px}
+  .mini-val{font-size:14px}
+  .mini-unit{font-size:6px;margin-top:1px}
+  .mini-bar{margin-top:3px;height:3px}
 
-  /* ── Stats strip: bottom row, 4 cols ── */
-  .stats-grid{
-    grid-column:1/-1;grid-row:2;
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:2px;padding:0;overflow:hidden
-  }
-  .stat{
-    padding:1px 4px;
-    flex-direction:row;
-    align-items:center;
-    gap:3px;
-    min-height:0;
-    border-radius:5px;
+  /* ── Centre-info: flex column — clock then coolant only ── */
+  .center-info{
+    display:flex!important;
+    flex-direction:column;
+    border-radius:8px;
     overflow:hidden
   }
-  .stat-icon{font-size:9px;margin:0;flex-shrink:0}
-  .stat-val{font-size:9px;line-height:1}
-  .stat-lbl{font-size:5px;line-height:1;white-space:nowrap}
-  .stat-reset{display:none}
+  .big-clock{
+    padding:6px 5px 4px;
+    border-bottom:1px solid var(--border);
+    flex-shrink:0
+  }
+  .clock-time{font-size:22px;letter-spacing:1px;line-height:1}
+  .clock-sub{gap:5px;margin-top:3px}
+  .gear-badge{font-size:24px;padding:0 6px;line-height:1.2}
+  .drive-mode{font-size:7px;letter-spacing:.5px}
 
-  /* Hide coolant canvas & span-4 blocks (coolant arc + doors) in landscape */
-  #ct-cv{display:none !important}
-  .stats-grid>.stat:nth-last-child(-n+2){display:none}
+  /* ── Stats-grid inside centre-info: show ONLY coolant, hide 4 trip stats + door ── */
+  .stats-grid{
+    flex:1;
+    display:flex!important;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:2px;
+    overflow:hidden
+  }
+  /* Hide the 4 trip-stat tiles */
+  .stats-grid>.stat:nth-child(-n+4){display:none!important}
+  /* Hide door-strip tile */
+  .stats-grid>.stat:last-child{display:none!important}
+  /* Coolant tile: compact column display */
+  .stats-grid>.stat:nth-last-child(2){
+    display:flex!important;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    padding:0 2px;
+    border:none;
+    background:transparent;
+    width:100%
+  }
+  /* "🌡️ COOLANT TEMP" label */
+  .stats-grid>.stat:nth-last-child(2)>div:first-child{
+    font-size:7px!important;
+    margin-bottom:0;
+    letter-spacing:1px
+  }
+  /* Canvas container — give explicit height so the absolute ct-val shows */
+  .stats-grid>.stat:nth-last-child(2)>div:nth-child(2){
+    min-height:48px!important;
+    height:48px!important;
+    overflow:visible;
+    width:100%
+  }
+  /* Scale labels row (40°C … 130°C): hide */
+  .stats-grid>.stat:nth-last-child(2)>div:last-child{display:none!important}
+  /* Hide coolant arc canvas */
+  #ct-cv{display:none!important}
+  /* Big coolant temperature reading */
+  #ct-val{font-size:22px!important;line-height:1}
+  /* "ENGINE COOLANT" sub-label inside the absolute box: hide */
+  #ct-val+div{display:none!important}
 
-  /* Hide bottom bar cards */
-  .bottom-row{display:none}
+  /* ── Bottom strip: fuel bar + mileage/time (was hidden, now shown compact) ── */
+  .bottom-row{
+    grid-column:1/-1;grid-row:2;
+    display:grid!important;
+    grid-template-columns:1fr 2fr;
+    gap:3px;
+    overflow:hidden
+  }
+  .bar-card{padding:3px 8px;gap:1px;justify-content:center}
+  .bar-name{font-size:7px;letter-spacing:0}
+  .bar-v{font-size:11px}
+  .bar-track{height:3px;margin-top:1px}
+  .bar-marks{display:none}
 
-  /* Nav bar */
-  .nav-btn{padding:4px 2px;font-size:7px;gap:1px}
-  .nav-btn span{font-size:14px}
+  /* ── Nav bar ── */
+  .bottom-nav{height:40px;min-height:0;flex-shrink:0;overflow:hidden}
+  .nav-btn{padding:0 2px;font-size:7px;gap:0;height:40px;min-height:0;justify-content:center}
+  .nav-btn span{font-size:15px;line-height:1}
+}
+
+/* ── Scale-up for larger landscape screens (≥600px wide, e.g. 1024×600, 1280×720) ── */
+@media (orientation:landscape) and (max-height:900px) and (min-width:600px){
+  .main-grid{grid-template-columns:1fr 330px 1fr;grid-template-rows:1fr 40px}
+  .center-panel{grid-template-columns:80px 1fr 80px}
+  .gl{font-size:10px}
+  .gv{font-size:30px}
+  .gu{font-size:9px}
+  .clock-time{font-size:26px;letter-spacing:2px}
+  .gear-badge{font-size:28px;padding:0 8px}
+  .drive-mode{font-size:8px;letter-spacing:.5px}
+  .mini-val{font-size:16px}
+  .mini-lbl{font-size:7px}
+  .mini-unit{font-size:7px}
+  #ct-val{font-size:26px!important}
+  .bar-name{font-size:8px}
+  .bar-v{font-size:13px}
+  .bar-track{height:4px}
+  .nav-btn{font-size:9px;padding:6px 3px}
+  .nav-btn span{font-size:16px}
+  .topbar{padding:3px 10px}
+  .obd-btn{font-size:10px;padding:4px 9px}
+  .top-action-btn{width:27px;height:27px;font-size:15px}
+  .wi{width:22px;height:22px;font-size:12px}
+  .tc-time{font-size:14px}
+  .stats-grid>.stat:nth-last-child(2)>div:nth-child(2){min-height:56px!important;height:56px!important}
 }
 
 /* ── Tablet portrait (768px – 1023px) ── */
@@ -1260,7 +1337,29 @@ canvas{display:block}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
-  alert("JS Loaded");
+// ── Old Android touch fix: onclick on <div> doesn't fire without this ──
+(function(){
+  if(document.addEventListener){
+    // Registering a touchstart listener (even empty) makes non-button elements
+    // "interactive" in old Android WebViews so onclick fires correctly.
+    document.addEventListener('touchstart',function(){},{passive:true});
+    // Also forward touchend→click for any [onclick] div that old Android misses
+    document.addEventListener('touchend',function(e){
+      var t=e.target;
+      for(var i=0;i<8&&t&&t!==document.body;i++){
+        var tag=t.tagName;
+        if(tag==='BUTTON'||tag==='INPUT'||tag==='SELECT'||tag==='A'){break;}
+        if(t.getAttribute&&t.getAttribute('onclick')){
+          e.preventDefault();
+          try{t.click();}catch(x){}
+          return;
+        }
+        t=t.parentElement;
+      }
+    },false);
+  }
+})();
+
 // ── Polyfill: roundRect() for Chrome < 99 / older car head unit WebViews ──
 if(!CanvasRenderingContext2D.prototype.roundRect){
   CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
