@@ -1337,6 +1337,18 @@ canvas{display:block}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" async></script>
 <script>
+// ── Catch ALL JS errors and show them visibly on screen ──
+window.onerror = function(msg, src, line, col, err) {
+  var d = document.getElementById('js-err-banner');
+  if (!d) {
+    d = document.createElement('div');
+    d.id = 'js-err-banner';
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;font-size:13px;padding:6px 10px;z-index:99999;font-family:monospace;white-space:pre-wrap;max-height:40vh;overflow:auto';
+    document.body.appendChild(d);
+  }
+  d.textContent += 'JS ERROR line ' + line + ': ' + msg + '\n';
+  return false;
+};
 // ── Old Android touch fix: onclick on <div> doesn't fire without this ──
 (function(){
   if(document.addEventListener){
