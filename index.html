@@ -1337,8 +1337,9 @@ canvas{display:block}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" async></script>
 <script>
-// ── Catch ALL JS errors and show them visibly on screen ──
+// ── Catch JS errors — suppress known harmless Capacitor bridge timing noise ──
 window.onerror = function(msg, src, line, col, err) {
+  if(msg && (msg.indexOf('triggerEvent') !== -1 || msg.indexOf('nativeBridge') !== -1)) return true;
   var d = document.getElementById('js-err-banner');
   if (!d) {
     d = document.createElement('div');
@@ -1346,7 +1347,7 @@ window.onerror = function(msg, src, line, col, err) {
     d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;font-size:13px;padding:6px 10px;z-index:99999;font-family:monospace;white-space:pre-wrap;max-height:40vh;overflow:auto';
     document.body.appendChild(d);
   }
-  d.textContent += 'JS ERROR line ' + line + ': ' + msg + '\n';
+  d.textContent += 'ERROR line ' + line + ': ' + msg + '\n';
   return false;
 };
 // ── Old Android touch fix: onclick on <div> doesn't fire without this ──
@@ -1661,7 +1662,28 @@ async function _autoConnect(addr, name){
 
 function toggleOBD(){
   if(S.connected){disconnectOBD();return;}
-  if(getCapBT()){connectOBD_Classic();}else{connectOBD();}
+  if(getCapBT()){
+    connectOBD_Classic();
+  } else if(window.Capacitor){
+    // Capacitor loaded but plugin not ready yet — retry up to 3s
+    showToast('⏳ Starting...','Waiting for Bluetooth plugin...');
+    var tries=0;
+    var poll=setInterval(function(){
+      tries++;
+      var bt=getCapBT();
+      if(bt){clearInterval(poll);connectOBD_Classic();}
+      else if(tries>=10){
+        clearInterval(poll);
+        // Show what plugins ARE available to help diagnose
+        var avail=window.Capacitor&&window.Capacitor.Plugins?Object.keys(window.Capacitor.Plugins).join(', '):'none';
+        showToast('❌ Plugin Missing','BluetoothSerial not found. Available: '+avail);
+      }
+    },300);
+  } else if(navigator.bluetooth){
+    connectOBD();
+  } else {
+    showToast('❌ Not Supported','Install the Android APK to use Bluetooth');
+  }
 }
 function setOBDBtn(s){
   const b=document.getElementById('obd-btn'),sig=document.getElementById('sig-v'),siu=document.getElementById('sig-u');
