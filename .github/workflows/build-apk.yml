@@ -24,6 +24,48 @@ jobs:
       - name: Install npm dependencies
         run: npm install
 
+      - name: Install Babel (ES6→ES5 transpiler for old Android WebView)
+        run: npm install --save-dev @babel/core @babel/cli @babel/preset-env
+
+      - name: Transpile index.html scripts ES6→ES5
+        run: |
+          node - << 'JSEOF'
+          const fs = require('fs');
+          const babel = require('@babel/core');
+
+          let html = fs.readFileSync('index.html', 'utf8');
+
+          // Match every inline <script> block (no src= attribute)
+          const re = /<script(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/g;
+          let out = '';
+          let last = 0;
+          let m;
+          while ((m = re.exec(html)) !== null) {
+            out += html.slice(last, m.index);
+            const code = m[1];
+            try {
+              const res = babel.transformSync(code, {
+                configFile: false,
+                presets: [['@babel/preset-env', {
+                  targets: { chrome: '37' },
+                  useBuiltIns: false,
+                  modules: false
+                }]]
+              });
+              out += '<script>' + res.code + '<\/script>';
+              console.log('Transpiled block ' + code.length + ' → ' + res.code.length + ' chars');
+            } catch(e) {
+              // If Babel can't parse it, keep original
+              console.warn('Babel skip:', e.message.split('\n')[0]);
+              out += m[0];
+            }
+            last = m.index + m[0].length;
+          }
+          out += html.slice(last);
+          fs.writeFileSync('index.html', out);
+          console.log('Done — index.html transpiled to ES5');
+          JSEOF
+
       - name: Patch plugin - insecure Bluetooth connect
         run: |
           FILE="node_modules/@e-is/capacitor-bluetooth-serial/android/src/main/java/com/bluetoothserial/BluetoothSerialService.java"
